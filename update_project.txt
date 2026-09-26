@@ -1,0 +1,4 @@
+sudo cp -a "/media/sf_YandexDisk/Компьютер ANALYST/analyst/reserve/Наработки/dream-team" /var/www/
+sudo chown -R www-data:www-data /var/www/dream-team
+sudo systemctl restart nginx
+sudo systemctl restart php8.3-fpm
