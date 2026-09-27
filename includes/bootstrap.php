@@ -108,17 +108,118 @@ function employees_read(): array
     return $employees;
 }
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-    session_set_cookie_params([
-        'lifetime' => 0,
+function browser_scheme(): string
+{
+    foreach ([$_SERVER['HTTP_ORIGIN'] ?? '', $_SERVER['HTTP_REFERER'] ?? ''] as $url) {
+        $url = (string) $url;
+        if (stripos($url, 'https://') === 0) {
+            return 'https';
+        }
+        if (stripos($url, 'http://') === 0) {
+            return 'http';
+        }
+    }
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host) ?? $host;
+    if ($host !== '' && filter_var($host, FILTER_VALIDATE_IP) !== false) {
+        return 'http';
+    }
+    return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https' ? 'https' : 'http';
+}
+
+function request_is_https(): bool
+{
+    return browser_scheme() === 'https';
+}
+
+function expire_cookie(string $name): void
+{
+    if ($name === '' || headers_sent()) {
+        return;
+    }
+    setcookie($name, '', [
+        'expires' => time() - 3600,
         'path' => '/',
+        'secure' => request_is_https(),
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure' => $secure,
     ]);
-    session_start();
+}
+
+function app_web_base(): string
+{
+    $host = preg_replace('/[^A-Za-z0-9.:\[\]-]/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')) ?? '';
+    if ($host === '') {
+        $host = 'localhost';
+    }
+    $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    $dir = rtrim($dir, '/');
+    if ($dir === '/' || $dir === '.' || $dir === '\\') {
+        $dir = '';
+    }
+    return (request_is_https() ? 'https' : 'http') . '://' . $host . $dir;
+}
+
+function redirect_to(string $target): void
+{
+    if (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $target)) {
+        $target = app_web_base() . '/' . ltrim($target, '/');
+    }
+    header('Location: ' . $target, true, 302);
+    exit;
+}
+
+function session_directory(): ?string
+{
+    $candidates = ['/var/lib/php/sessions'];
+    $configured = (string) ini_get('session.save_path');
+    if ($configured !== '' && !str_contains($configured, ';') && !in_array($configured, $candidates, true)) {
+        $candidates[] = $configured;
+    }
+    try {
+        $candidates[] = data_dir() . '/sessions';
+    } catch (RuntimeException) {
+    }
+    foreach ($candidates as $dir) {
+        if (!is_dir($dir) && !@mkdir($dir, 0770, true) && !is_dir($dir)) {
+            continue;
+        }
+        if (!is_writable($dir)) {
+            continue;
+        }
+        if (ini_set('session.save_path', $dir) === false) {
+            continue;
+        }
+        $applied = rtrim(str_replace('\\', '/', (string) ini_get('session.save_path')), '/');
+        $wanted = rtrim(str_replace('\\', '/', $dir), '/');
+        if ($applied === $wanted) {
+            return $dir;
+        }
+    }
+    return null;
+}
+
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
+session_directory();
+session_name('QDIGEST');
+ini_set('session.use_strict_mode', '0');
+ini_set('session.use_cookies', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_trans_sid', '0');
+ini_set('session.lazy_write', '0');
+ini_set('session.cookie_lifetime', '0');
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', request_is_https() ? '1' : '0');
+if (session_start() !== true) {
+    $GLOBALS['session_error'] = 'Сервер не сохранил сессию. Проверьте права на каталог сессий PHP.';
 }
 
 require_once __DIR__ . '/auth.php';
+
+if (!headers_sent()) {
+    header('X-Qdigest-Session: ' . (current_user() !== null ? 'ok' : 'anon'));
+}

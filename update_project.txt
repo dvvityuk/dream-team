@@ -1,4 +1,25 @@
-sudo cp -a "/media/sf_YandexDisk/Компьютер ANALYST/analyst/reserve/Наработки/dream-team" /var/www/
+sudo apt update
+sudo apt install -y nginx php8.3-fpm php8.3-cli certbot
+
+sudo mkdir -p /var/www/dream-team
+sudo rsync -a ./ /var/www/dream-team/
 sudo chown -R www-data:www-data /var/www/dream-team
-sudo systemctl restart nginx
+
+sudo cp nginx/dream-team.pool.conf /etc/php/8.3/fpm/pool.d/dream-team.conf
 sudo systemctl restart php8.3-fpm
+
+sudo cp nginx/qdigest-site.conf /etc/nginx/snippets/qdigest-site.conf
+sudo cp nginx/qdigest-ssl.conf /etc/nginx/snippets/qdigest-ssl.conf
+sudo cp nginx/dream-team.http.conf /etc/nginx/sites-available/qdigest.ru
+sudo ln -sfn /etc/nginx/sites-available/qdigest.ru /etc/nginx/sites-enabled/qdigest.ru
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+
+sudo certbot certonly --webroot -w /var/www/dream-team -d qdigest.ru -d www.qdigest.ru --deploy-hook "systemctl reload nginx"
+
+sudo cp nginx/dream-team.conf /etc/nginx/sites-available/qdigest.ru
+sudo nginx -t
+sudo systemctl reload nginx
+
+sudo bash postfix/install.sh

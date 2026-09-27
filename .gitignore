@@ -1,0 +1,8 @@
+data/sessions/
+data/php-error.log
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

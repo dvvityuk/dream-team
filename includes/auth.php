@@ -96,8 +96,7 @@ function require_login(): void
     $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
     $page = in_array($script, ['index.php', 'team-building.php'], true);
     if ($page && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-        header('Location: login.php?next=' . rawurlencode($script));
-        exit;
+        redirect_to('login.php?next=' . rawurlencode($script));
     }
     json_response(['success' => false, 'error' => 'Требуется авторизация'], 401);
 }
@@ -121,8 +120,20 @@ function attempt_login(string $username, string $password): bool
     if (!password_verify($password, $users[$username]['password'])) {
         return false;
     }
+    if (headers_sent($file, $line)) {
+        $GLOBALS['session_error'] = 'Сессия не записалась: до cookie уже был вывод (' . $file . ':' . $line . ').';
+        return false;
+    }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        $GLOBALS['session_error'] = 'Сервер не сохранил сессию. Проверьте права на каталог сессий PHP.';
+        return false;
+    }
     session_regenerate_id(true);
+    if (session_status() !== PHP_SESSION_ACTIVE && session_start() !== true) {
+        $GLOBALS['session_error'] = 'Сервер не сохранил сессию. Проверьте права на каталог сессий PHP.';
+        return false;
+    }
     $_SESSION['user'] = $username;
     $_SESSION['role'] = ($users[$username]['role'] ?? '') === 'admin' ? 'admin' : 'expert';
-    return true;
+    return current_user() === $username;
 }

@@ -3,23 +3,25 @@ require __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/layout.php';
 
 $next = safe_next($_GET['next'] ?? ($_POST['next'] ?? 'index.php'));
-$error = '';
+$error = (string) ($GLOBALS['session_error'] ?? '');
 
-if (current_user() !== null && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . $next);
-    exit;
+if ($error === '' && current_user() !== null && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    redirect_to($next);
 }
 
-if (!storage_ready()) {
+if ($error === '' && !storage_ready()) {
     $error = 'Нет прав на запись в каталог data. На сервере выполните chown для www-data.';
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+} elseif ($error === '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = (string) ($_POST['username'] ?? '');
     $password = (string) ($_POST['password'] ?? '');
     if (attempt_login($username, $password)) {
-        header('Location: ' . safe_next($_POST['next'] ?? 'index.php'));
-        exit;
+        session_write_close();
+        redirect_to(safe_next($_POST['next'] ?? 'index.php'));
+    } elseif (!empty($GLOBALS['session_error'])) {
+        $error = (string) $GLOBALS['session_error'];
+    } else {
+        $error = 'Неверный логин или пароль';
     }
-    $error = 'Неверный логин или пароль';
 }
 
 render_head('Вход — Q digest');
@@ -39,7 +41,7 @@ render_head('Вход — Q digest');
     <?php if ($error !== ''): ?>
       <p class="form-error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
     <?php endif; ?>
-    <form method="post" action="login.php" autocomplete="on">
+    <form method="post" action="<?= htmlspecialchars(app_web_base() . '/login.php', ENT_QUOTES, 'UTF-8') ?>" autocomplete="on">
       <input type="hidden" name="next" value="<?= htmlspecialchars($next, ENT_QUOTES, 'UTF-8') ?>">
       <label for="username">Аккаунт</label>
       <input id="username" name="username" autocomplete="username" required placeholder="expert или admin">
