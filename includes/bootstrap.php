@@ -108,8 +108,29 @@ function employees_read(): array
     return $employees;
 }
 
+function connection_is_tls(): bool
+{
+    if (strtolower((string) ($_SERVER['QDIGEST_HTTPS'] ?? '')) === 'on') {
+        return true;
+    }
+    $https = strtolower((string) ($_SERVER['HTTPS'] ?? ''));
+    if ($https === 'on' || $https === '1') {
+        return true;
+    }
+    return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
+}
+
 function browser_scheme(): string
 {
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host) ?? $host;
+    $hostIsIp = $host !== '' && filter_var($host, FILTER_VALIDATE_IP) !== false;
+    if ($hostIsIp) {
+        return strtolower((string) ($_SERVER['QDIGEST_HTTPS'] ?? '')) === 'on' ? 'https' : 'http';
+    }
+    if (connection_is_tls()) {
+        return 'https';
+    }
     foreach ([$_SERVER['HTTP_ORIGIN'] ?? '', $_SERVER['HTTP_REFERER'] ?? ''] as $url) {
         $url = (string) $url;
         if (stripos($url, 'https://') === 0) {
@@ -119,12 +140,7 @@ function browser_scheme(): string
             return 'http';
         }
     }
-    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
-    $host = preg_replace('/:\d+$/', '', $host) ?? $host;
-    if ($host !== '' && filter_var($host, FILTER_VALIDATE_IP) !== false) {
-        return 'http';
-    }
-    return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https' ? 'https' : 'http';
+    return 'http';
 }
 
 function request_is_https(): bool
