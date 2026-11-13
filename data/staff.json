@@ -1,0 +1,66 @@
+{
+    "fields": [
+        {
+            "id": "iqos",
+            "label": "Как попал в IQOS"
+        },
+        {
+            "id": "client",
+            "label": "Самый запоминающийся клиент"
+        },
+        {
+            "id": "flavor",
+            "label": "Любимый вкус"
+        }
+    ],
+    "people": [
+        {
+            "id": "95f5bab969d1c09f",
+            "lastName": "Крутченко",
+            "firstName": "Ксения",
+            "position": "SE",
+            "image": "images\/97aa84c6d58f22b4.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "id": "b8a3e8a41a2fa786",
+            "lastName": "Самойлова",
+            "firstName": "Юлия",
+            "position": "SSE",
+            "image": "images\/7834321608dea90d.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "id": "d3e41e518519305b",
+            "lastName": "Михайлова",
+            "firstName": "Полина",
+            "position": "SE",
+            "image": "images\/cb5dfdce7c9079f4.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "id": "ea5f96bdb22e94e4",
+            "lastName": "Логунова",
+            "firstName": "Анастасия",
+            "position": "SSE",
+            "image": "images\/80d0eb615f7da219.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        }
+    ]
+}

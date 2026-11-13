@@ -329,6 +329,100 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
   border-color: var(--line);
 }
 
+button.story-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.story-last,
+.story-first {
+  display: block;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+
+.story-role,
+.story-position { color: var(--accent-text); }
+
+.staff-preview {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: var(--media-bg);
+}
+
+.story-photo {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(38dvh, 280px);
+  margin-inline: auto;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 18px;
+  background: var(--media-bg);
+}
+
+.story-fact h3 { margin: 16px 0 4px; font-size: 1rem; }
+.story-fact p { margin: 0; white-space: pre-wrap; }
+.story-label { color: var(--muted); font-size: 0.92rem; }
+#story-editor, #story-form { display: flex; flex-direction: column; gap: 12px; }
+#story-editor { margin-top: 8px; }
+#story-edit { margin-top: 18px; }
+.story-field-row input { flex: 1 1 180px; }
+
+.modal.story-modal {
+  overflow: hidden;
+  padding: 16px;
+}
+
+.modal.story-modal .story-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 0;
+  transform: translateY(28px) scale(0.96);
+}
+
+.modal.story-modal .story-dialog .close-modal {
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  z-index: 2;
+  margin: -8px -8px -28px 0;
+  background: var(--card);
+}
+
+.story-modal.is-open .story-dialog {
+  animation: story-rise 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes story-rise {
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.story-modal .story-dialog,
+  .story-card {
+    animation: none;
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .employee-card img, .folder-cover img, .photo-card img {
   width: 100%;
   aspect-ratio: 1;
@@ -371,7 +465,7 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
   border: 1px solid var(--line);
 }
 
-input, textarea {
+input, textarea, select {
   width: 100%;
   padding: 12px 14px;
   border-radius: 14px;
@@ -384,7 +478,7 @@ textarea { min-height: 120px; resize: vertical; }
 
 ::placeholder { color: var(--muted); }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);

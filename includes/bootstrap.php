@@ -80,32 +80,65 @@ function delete_public_image(string $relative): void
 
 function employees_read(): array
 {
-    $path = app_root() . '/employees.json';
-    if (!is_file($path)) {
-        return [];
+    require_once __DIR__ . '/staff.php';
+    return digest_public_list();
+}
+
+function project_logs_prune(): void
+{
+    try {
+        $dir = data_dir();
+    } catch (RuntimeException) {
+        return;
     }
-    $decoded = json_decode((string) file_get_contents($path), true);
-    if (!is_array($decoded)) {
-        return [];
+    $logs = $dir . '/logs';
+    if (!is_dir($logs) && !@mkdir($logs, 0775, true) && !is_dir($logs)) {
+        return;
     }
-    $employees = [];
-    foreach ($decoded as $item) {
-        if (!is_array($item)) {
-            continue;
+    $today = date('Y-m-d');
+    $marker = $logs . '/rotate-day.txt';
+    $marked = is_file($marker) ? trim((string) file_get_contents($marker)) : '';
+    $active = $dir . '/php-error.log';
+    if ($marked !== '' && $marked !== $today && is_file($active) && (int) filesize($active) > 0) {
+        $archive = $logs . '/php-error-' . $marked . '.log';
+        if (!is_file($archive) && @copy($active, $archive)) {
+            $handle = fopen($active, 'c');
+            if ($handle !== false) {
+                if (flock($handle, LOCK_EX)) {
+                    ftruncate($handle, 0);
+                    fflush($handle);
+                    flock($handle, LOCK_UN);
+                }
+                fclose($handle);
+            }
         }
-        $name = trim((string) ($item['name'] ?? ''));
-        $achievements = trim((string) ($item['achievements'] ?? ''));
-        $image = str_replace('\\', '/', trim((string) ($item['image'] ?? '')));
-        if ($name === '') {
-            continue;
-        }
-        $employees[] = [
-            'name' => $name,
-            'achievements' => $achievements,
-            'image' => $image,
-        ];
     }
-    return $employees;
+    if ($marked !== $today) {
+        @file_put_contents($marker, $today, LOCK_EX);
+    }
+    $limit = time() - 30 * 86400;
+    $old = array_merge(
+        glob($logs . '/php-error-*.log') ?: [],
+        glob($logs . '/php-error-*.log.gz') ?: [],
+        glob($dir . '/php-error.log-*') ?: []
+    );
+    foreach ($old as $file) {
+        if (is_file($file) && filemtime($file) < $limit) {
+            @unlink($file);
+        }
+    }
+}
+
+function connection_is_tls(): bool
+{
+    if (strtolower((string) ($_SERVER['QDIGEST_HTTPS'] ?? '')) === 'on') {
+        return true;
+    }
+    $https = strtolower((string) ($_SERVER['HTTPS'] ?? ''));
+    if ($https === 'on' || $https === '1') {
+        return true;
+    }
+    return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
 }
 
 function connection_is_tls(): bool
@@ -214,6 +247,8 @@ function session_directory(): ?string
     }
     return null;
 }
+
+project_logs_prune();
 
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();

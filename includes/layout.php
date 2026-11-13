@@ -21,6 +21,7 @@ function render_head(string $title): void
 {
     $safe = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
     $style = asset_href('style.css');
+    $icon = asset_href('img/favicon.svg');
     echo <<<HTML
 <!DOCTYPE html>
 <html lang="ru">
@@ -28,6 +29,7 @@ function render_head(string $title): void
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
+  <link rel="icon" href="{$icon}" type="image/svg+xml">
   <script>
     (function () {
       try {
@@ -53,7 +55,10 @@ function layout_start(string $title, string $active): void
     $role = is_admin() ? 'полный доступ' : 'только просмотр';
     $bodyClass = is_admin() ? 'is-admin' : 'is-expert';
     $digest = $active === 'digest' ? ' class="active" aria-current="page"' : '';
+    $story = $active === 'story' ? ' class="active" aria-current="page"' : '';
     $team = $active === 'team' ? ' class="active" aria-current="page"' : '';
+    $edit = $active === 'edit' ? ' class="active" aria-current="page"' : '';
+    $editLink = is_admin() ? '<a href="edit.php"' . $edit . '>Редактирование</a>' : '';
     $themeSwitch = theme_switch();
     echo <<<HTML
 <body class="{$bodyClass}">
@@ -67,7 +72,9 @@ function layout_start(string $title, string $active): void
     </div>
     <nav class="side-nav">
       <a href="index.php"{$digest}>Q digest</a>
+      <a href="storytelling.php"{$story}>storytelling</a>
       <a href="team-building.php"{$team}>Team building</a>
+      {$editLink}
     </nav>
     {$themeSwitch}
     <button type="button" class="btn side-feedback js-feedback">Напиши мне</button>

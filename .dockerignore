@@ -1,0 +1,9 @@
+.git
+.idea
+.vscode
+data/sessions
+data/mail
+data/logs
+data/php-error.log
+data/github-push.env
+**/*.log

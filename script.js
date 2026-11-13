@@ -4,40 +4,102 @@ document.addEventListener('DOMContentLoaded', function () {
   const employeeForm = document.getElementById('employee-form');
   const employeeList = document.getElementById('employee-list');
   const saveJsonBtn = document.getElementById('save-json');
-  const chooseImageBtn = document.getElementById('choose-image');
-  const imageUpload = document.getElementById('image-upload');
-  const imagePathInput = document.getElementById('image');
+  const staffSelect = document.getElementById('staff-id');
+  const staffPreview = document.getElementById('staff-preview');
   const headerDateElement = document.getElementById('header-date');
   const headerDateInput = document.getElementById('header-date-input');
   const updateDateBtn = document.getElementById('update-date-btn');
   const editFormContainer = document.getElementById('edit-form-container');
   const editEmployeeForm = document.getElementById('edit-employee-form');
   const editIndexInput = document.getElementById('edit-index');
-  const editNameInput = document.getElementById('edit-name');
+  const editStaffSelect = document.getElementById('edit-staff-id');
+  const editStaffPreview = document.getElementById('edit-staff-preview');
   const editAchievementsInput = document.getElementById('edit-achievements');
-  const editImageInput = document.getElementById('edit-image');
-  const chooseEditImageBtn = document.getElementById('choose-edit-image');
-  const editImageUpload = document.getElementById('edit-image-upload');
   const cancelEditBtn = document.getElementById('cancel-edit');
   const emailSettingsForm = document.getElementById('email-settings-form');
   const senderEmailInput = document.getElementById('sender-email');
   const emailSubjectInput = document.getElementById('email-subject');
   const expertPasswordForm = document.getElementById('expert-password-form');
+  const staffForm = document.getElementById('staff-form');
+  const staffList = document.getElementById('staff-list');
+  const staffEditId = document.getElementById('staff-edit-id');
+  const staffLast = document.getElementById('staff-last');
+  const staffFirst = document.getElementById('staff-first');
+  const staffPosition = document.getElementById('staff-position');
+  const staffImage = document.getElementById('staff-image');
+  const staffImageUpload = document.getElementById('staff-image-upload');
+  const staffChooseImage = document.getElementById('staff-choose-image');
+  const staffSubmit = document.getElementById('staff-submit');
+  const staffCancel = document.getElementById('staff-cancel');
 
   let employees = [];
+  let staffPeople = [];
   let isUploading = false;
-  const embeddedEmployees = document.getElementById('employees-bootstrap');
-  if (embeddedEmployees && embeddedEmployees.textContent) {
+
+  function readEmbedded(id) {
+    const node = document.getElementById(id);
+    if (!node || !node.textContent) return [];
     try {
-      const parsed = JSON.parse(embeddedEmployees.textContent);
-      if (Array.isArray(parsed)) employees = parsed;
+      const parsed = JSON.parse(node.textContent);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      employees = [];
+      return [];
     }
   }
 
+  employees = readEmbedded('employees-bootstrap');
+  staffPeople = readEmbedded('staff-bootstrap');
+
   function safeImage(src) {
     return typeof src === 'string' && /^images\/[A-Za-z0-9._-]+$/.test(src) ? src : '';
+  }
+
+  function staffById(id) {
+    return staffPeople.find(function (person) { return person.id === id; }) || null;
+  }
+
+  function present(employee) {
+    const person = staffById(employee.staffId);
+    return {
+      staffId: employee.staffId,
+      achievements: employee.achievements,
+      name: person ? person.label : 'Сотрудник удалён из списка',
+      image: person ? person.image : ''
+    };
+  }
+
+  function fillSelect(select, selected) {
+    if (!select) return;
+    const current = selected || select.value;
+    select.innerHTML = '<option value="">Выберите сотрудника</option>';
+    staffPeople.forEach(function (person) {
+      const option = document.createElement('option');
+      option.value = person.id;
+      option.textContent = person.label;
+      select.appendChild(option);
+    });
+    select.value = staffById(current) ? current : '';
+  }
+
+  function showPreview(select, image) {
+    if (!select || !image) return;
+    const person = staffById(select.value);
+    const src = person ? safeImage(person.image) : '';
+    if (!src) {
+      image.hidden = true;
+      image.removeAttribute('src');
+      return;
+    }
+    image.src = src;
+    image.alt = person.label;
+    image.hidden = false;
+  }
+
+  function refreshSelects() {
+    fillSelect(staffSelect);
+    fillSelect(editStaffSelect, editStaffSelect ? editStaffSelect.value : '');
+    showPreview(staffSelect, staffPreview);
+    showPreview(editStaffSelect, editStaffPreview);
   }
 
   function loadEmployeesData() {
@@ -47,15 +109,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!data) return;
         employees = Array.isArray(data) ? data : [];
         renderEmployeeList();
-        renderTeamCards();
       })
-      .catch(function () {
-        if (employees.length > 0) return;
-        const container = document.getElementById('team-list');
-        if (container) {
-          container.innerHTML = '<p class="error-message">Не удалось загрузить сотрудников.</p>';
-        }
-      });
+      .catch(function () {});
 
     fetch('get_header_date.php?v=' + Date.now())
       .then(readJson)
@@ -73,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
     fetch('get_email_settings.php?v=' + Date.now())
       .then(readJson)
       .then(function (data) {
-        if (!data || !data.success) return;
+        if (!data || !data.success || !senderEmailInput) return;
         senderEmailInput.value = data.settings.sender || '';
         emailSubjectInput.value = data.settings.subject || '';
       })
@@ -113,43 +168,174 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  chooseImageBtn?.addEventListener('click', function () {
-    imageUpload.click();
+  staffChooseImage?.addEventListener('click', function () {
+    staffImageUpload.click();
   });
-  imageUpload?.addEventListener('change', function () {
-    uploadImage(imageUpload, imagePathInput, chooseImageBtn, 'Выбрать фото');
+  staffImageUpload?.addEventListener('change', function () {
+    uploadImage(staffImageUpload, staffImage, staffChooseImage, 'Выбрать фото');
   });
-  chooseEditImageBtn?.addEventListener('click', function () {
-    editImageUpload.click();
+
+  function resetStaffForm() {
+    staffForm.reset();
+    staffEditId.value = '';
+    staffImage.value = '';
+    staffSubmit.textContent = 'Добавить в список';
+    staffCancel.hidden = true;
+  }
+
+  function renderStaffList() {
+    if (!staffList) return;
+    staffList.innerHTML = '';
+    if (staffPeople.length === 0) {
+      staffList.innerHTML = '<p class="empty-message">Список сотрудников пуст</p>';
+      return;
+    }
+    staffPeople.forEach(function (person) {
+      const item = document.createElement('div');
+      item.className = 'employee-item';
+      const image = safeImage(person.image);
+      item.innerHTML =
+        '<div class="employee-info">' +
+          (image ? '<img src="' + escapeHtml(image) + '" alt="" class="employee-thumb">' : '') +
+          '<div class="employee-details"><h3>' + escapeHtml(person.lastName) + ' ' + escapeHtml(person.firstName) +
+          '</h3><p>' + escapeHtml(person.position) + '</p></div></div>' +
+        '<div class="button-row">' +
+          '<button type="button" class="btn ghost" data-staff-edit="' + escapeHtml(person.id) + '">Изменить</button>' +
+          '<button type="button" class="btn danger" data-staff-delete="' + escapeHtml(person.id) + '">Удалить</button>' +
+        '</div>';
+      staffList.appendChild(item);
+    });
+  }
+
+  function applyStaff(people) {
+    staffPeople = Array.isArray(people) ? people : [];
+    renderStaffList();
+    refreshSelects();
+    renderEmployeeList();
+  }
+
+  staffForm?.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const id = staffEditId.value;
+    const payload = {
+      action: id ? 'update' : 'create',
+      id: id,
+      person: {
+        lastName: staffLast.value.trim(),
+        firstName: staffFirst.value.trim(),
+        position: staffPosition.value.trim(),
+        image: staffImage.value.trim()
+      }
+    };
+    if (!safeImage(payload.person.image)) {
+      showNotification('Загрузите фото', 'error');
+      return;
+    }
+    staffSubmit.disabled = true;
+    fetch('save_staff.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(readJson)
+      .then(function (data) {
+        if (!data) return;
+        if (data.success) {
+          applyStaff(data.people);
+          resetStaffForm();
+          showNotification(id ? 'Сотрудник обновлён' : 'Сотрудник добавлен в список', 'success');
+        } else {
+          showNotification(data.error || 'Не удалось сохранить', 'error');
+        }
+      })
+      .catch(function () {
+        showNotification('Нет соединения с сервером', 'error');
+      })
+      .finally(function () {
+        staffSubmit.disabled = false;
+      });
   });
-  editImageUpload?.addEventListener('change', function () {
-    uploadImage(editImageUpload, editImageInput, chooseEditImageBtn, 'Выбрать фото');
+
+  staffCancel?.addEventListener('click', resetStaffForm);
+
+  staffList?.addEventListener('click', function (event) {
+    const edit = event.target.closest('[data-staff-edit]');
+    const remove = event.target.closest('[data-staff-delete]');
+    if (edit) {
+      const person = staffById(edit.getAttribute('data-staff-edit'));
+      if (!person) return;
+      staffEditId.value = person.id;
+      staffLast.value = person.lastName;
+      staffFirst.value = person.firstName;
+      staffPosition.value = person.position;
+      staffImage.value = person.image;
+      staffSubmit.textContent = 'Сохранить сотрудника';
+      staffCancel.hidden = false;
+      staffForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (remove) {
+      const id = remove.getAttribute('data-staff-delete');
+      const person = staffById(id);
+      if (!person || !confirm('Удалить из списка ' + person.lastName + ' ' + person.firstName + '?')) return;
+      fetch('save_staff.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id: id })
+      })
+        .then(readJson)
+        .then(function (data) {
+          if (!data) return;
+          if (data.success) {
+            employees = employees.filter(function (employee) { return employee.staffId !== id; });
+            applyStaff(data.people);
+            if (staffEditId.value === id) resetStaffForm();
+            showNotification('Сотрудник удалён из списка', 'success');
+          } else {
+            showNotification(data.error || 'Не удалось удалить', 'error');
+          }
+        })
+        .catch(function () {
+          showNotification('Нет соединения с сервером', 'error');
+        });
+    }
+  });
+
+  staffSelect?.addEventListener('change', function () {
+    showPreview(staffSelect, staffPreview);
+  });
+  editStaffSelect?.addEventListener('change', function () {
+    showPreview(editStaffSelect, editStaffPreview);
   });
 
   employeeForm?.addEventListener('submit', function (event) {
     event.preventDefault();
-    const employee = {
-      name: document.getElementById('name').value.trim(),
-      achievements: document.getElementById('achievements').value.trim(),
-      image: document.getElementById('image').value.trim()
-    };
-    if (!safeImage(employee.image)) {
-      showNotification('Загрузите фото', 'error');
+    const staffId = staffSelect.value;
+    const achievements = document.getElementById('achievements').value.trim();
+    if (!staffById(staffId)) {
+      showNotification('Выберите сотрудника из списка', 'error');
       return;
     }
-    employees.push(employee);
+    if (employees.some(function (employee) { return employee.staffId === staffId; })) {
+      showNotification('Этот сотрудник уже есть в Q digest', 'error');
+      return;
+    }
+    if (!achievements) {
+      showNotification('Опишите достижения', 'error');
+      return;
+    }
+    employees.push({ staffId: staffId, achievements: achievements });
     renderEmployeeList();
-    renderTeamCards();
     employeeForm.reset();
-    showNotification('Сотрудник добавлен. Сохраните изменения на сервере.', 'success');
+    showPreview(staffSelect, staffPreview);
+    showNotification('Карточка добавлена. Сохраните изменения на сервере.', 'success');
   });
 
   window.editEmployee = function (index) {
     const employee = employees[index];
     editIndexInput.value = String(index);
-    editNameInput.value = employee.name;
+    fillSelect(editStaffSelect, employee.staffId);
     editAchievementsInput.value = employee.achievements;
-    editImageInput.value = employee.image;
+    showPreview(editStaffSelect, editStaffPreview);
     employeeForm.hidden = true;
     editFormContainer.hidden = false;
   };
@@ -157,13 +343,20 @@ document.addEventListener('DOMContentLoaded', function () {
   editEmployeeForm?.addEventListener('submit', function (event) {
     event.preventDefault();
     const index = Number(editIndexInput.value);
-    employees[index] = {
-      name: editNameInput.value.trim(),
-      achievements: editAchievementsInput.value.trim(),
-      image: editImageInput.value.trim()
-    };
+    const staffId = editStaffSelect.value;
+    const achievements = editAchievementsInput.value.trim();
+    if (!staffById(staffId)) {
+      showNotification('Выберите сотрудника из списка', 'error');
+      return;
+    }
+    if (employees.some(function (employee, itemIndex) {
+      return itemIndex !== index && employee.staffId === staffId;
+    })) {
+      showNotification('Этот сотрудник уже есть в Q digest', 'error');
+      return;
+    }
+    employees[index] = { staffId: staffId, achievements: achievements };
     renderEmployeeList();
-    renderTeamCards();
     cancelEdit();
     showNotification('Изменения в списке. Сохраните их на сервере.', 'success');
   });
@@ -173,15 +366,19 @@ document.addEventListener('DOMContentLoaded', function () {
     editFormContainer.hidden = true;
     employeeForm.hidden = false;
     editEmployeeForm.reset();
+    showPreview(editStaffSelect, editStaffPreview);
   }
 
   saveJsonBtn?.addEventListener('click', function () {
     saveJsonBtn.textContent = 'Сохранение...';
     saveJsonBtn.disabled = true;
+    const payload = employees.map(function (employee) {
+      return { staffId: employee.staffId, achievements: employee.achievements };
+    });
     fetch('save_json.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(employees)
+      body: JSON.stringify(payload)
     })
       .then(readJson)
       .then(function (data) {
@@ -217,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (data) {
         if (!data) return;
         if (data.success) {
-          headerDateElement.textContent = newDate;
+          if (headerDateElement) headerDateElement.textContent = newDate;
           headerDateInput.value = '';
           showNotification('Дата обновлена', 'success');
         } else {
@@ -281,18 +478,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!employeeList) return;
     employeeList.innerHTML = '';
     if (employees.length === 0) {
-      employeeList.innerHTML = '<p class="empty-message">Нет сотрудников</p>';
+      employeeList.innerHTML = '<p class="empty-message">В Q digest пока никого нет</p>';
       return;
     }
     employees.forEach(function (employee, index) {
+      const view = present(employee);
       const item = document.createElement('div');
       item.className = 'employee-item';
-      const image = safeImage(employee.image);
+      const image = safeImage(view.image);
       item.innerHTML =
         '<div class="employee-info">' +
           (image ? '<img src="' + escapeHtml(image) + '" alt="" class="employee-thumb">' : '') +
-          '<div class="employee-details"><h3>' + escapeHtml(employee.name) + '</h3><p>' +
-            escapeHtml(employee.achievements) + '</p></div></div>' +
+          '<div class="employee-details"><h3>' + escapeHtml(view.name) + '</h3><p>' +
+            escapeHtml(view.achievements) + '</p></div></div>' +
         '<div class="button-row">' +
           '<button type="button" class="btn ghost" data-edit="' + index + '">Изменить</button>' +
           '<button type="button" class="btn danger" data-delete="' + index + '">Удалить</button>' +
@@ -308,36 +506,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (remove) deleteEmployee(Number(remove.getAttribute('data-delete')));
   });
 
-  function renderTeamCards() {
-    const container = document.getElementById('team-list');
-    if (!container) return;
-    container.innerHTML = '';
-    if (employees.length === 0) {
-      container.innerHTML = '<p class="empty-message">Нет данных о сотрудниках</p>';
-      return;
-    }
-    employees.forEach(function (employee) {
-      const card = document.createElement('article');
-      card.className = 'employee-card';
-      const image = safeImage(employee.image);
-      card.innerHTML =
-        (image ? '<img src="' + escapeHtml(image) + '" alt="Фото ' + escapeHtml(employee.name) + '">' : '') +
-        '<h2>' + escapeHtml(employee.name) + '</h2>' +
-        '<p>' + escapeHtml(employee.achievements) + '</p>';
-      container.appendChild(card);
-    });
-  }
-
   window.deleteEmployee = function (index) {
-    const name = employees[index] ? employees[index].name : '';
-    if (!confirm('Удалить сотрудника ' + name + '?')) return;
+    const view = employees[index] ? present(employees[index]) : { name: '' };
+    if (!confirm('Убрать из Q digest ' + view.name + '?')) return;
     employees.splice(index, 1);
     renderEmployeeList();
-    renderTeamCards();
-    showNotification('Сотрудник удалён из списка. После сохранения на сервере его фото будет удалено из images.', 'warning');
+    showNotification('Карточка убрана из списка. Сохраните изменения на сервере.', 'warning');
   };
 
+  refreshSelects();
+  renderStaffList();
   renderEmployeeList();
-  renderTeamCards();
-  loadEmployeesData();
+  if (isAdmin) loadEmployeesData();
 });

@@ -73,7 +73,7 @@ function is_admin(): bool
 function safe_next(?string $next): string
 {
     $next = basename((string) $next);
-    if (!in_array($next, ['index.php', 'team-building.php'], true)) {
+    if (!in_array($next, ['index.php', 'team-building.php', 'storytelling.php', 'edit.php'], true)) {
         return 'index.php';
     }
     return $next;

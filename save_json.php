@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require_once __DIR__ . '/includes/staff.php';
 require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,44 +12,37 @@ if (!is_array($data)) {
     json_response(['success' => false, 'error' => 'Некорректный JSON'], 400);
 }
 
+$directory = staff_load();
+$known = [];
+foreach ($directory['people'] as $person) {
+    $known[$person['id']] = true;
+}
+
 $clean = [];
+$seen = [];
 foreach ($data as $item) {
     if (!is_array($item)) {
         json_response(['success' => false, 'error' => 'Некорректная карточка'], 400);
     }
-    $name = trim((string) ($item['name'] ?? ''));
+    $staffId = trim((string) ($item['staffId'] ?? ''));
     $achievements = trim((string) ($item['achievements'] ?? ''));
-    $image = str_replace('\\', '/', trim((string) ($item['image'] ?? '')));
-    if ($name === '' || $achievements === '' || text_length($name) > 200 || text_length($achievements) > 2000) {
-        json_response(['success' => false, 'error' => 'Проверьте имя и достижения'], 400);
+    if (!isset($known[$staffId])) {
+        json_response(['success' => false, 'error' => 'Выберите сотрудника из списка'], 400);
     }
-    if (!preg_match('#^images/[A-Za-z0-9._-]+$#', $image)) {
-        json_response(['success' => false, 'error' => 'Некорректный путь к фото'], 400);
+    if (isset($seen[$staffId])) {
+        json_response(['success' => false, 'error' => 'Этот сотрудник уже есть в Q digest'], 400);
     }
+    if ($achievements === '' || text_length($achievements) > 2000) {
+        json_response(['success' => false, 'error' => 'Опишите достижения'], 400);
+    }
+    $seen[$staffId] = true;
     $clean[] = [
-        'name' => $name,
+        'staffId' => $staffId,
         'achievements' => $achievements,
-        'image' => $image,
     ];
 }
 
-$previousImages = [];
-foreach (employees_read() as $employee) {
-    $previousImages[$employee['image']] = true;
-}
-$keptImages = [];
-foreach ($clean as $employee) {
-    $keptImages[$employee['image']] = true;
-}
-
-$json = json_encode($clean, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-if (file_put_contents(app_root() . '/employees.json', $json, LOCK_EX) === false) {
+if (!digest_write($clean)) {
     json_response(['success' => false, 'error' => 'Не удалось записать файл'], 500);
-}
-
-foreach (array_keys($previousImages) as $image) {
-    if (!isset($keptImages[$image])) {
-        delete_public_image($image);
-    }
 }
 json_response(['success' => true]);

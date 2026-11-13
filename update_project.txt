@@ -23,3 +23,4 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 sudo bash postfix/install.sh
+sudo bash postfix/enable-with-site.sh

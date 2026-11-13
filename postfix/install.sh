@@ -57,13 +57,7 @@ postmap /etc/postfix/generic
 chmod 600 /etc/postfix/generic /etc/postfix/generic.db
 
 systemctl restart postfix
-systemctl enable postfix
-
-pool="/etc/php/8.3/fpm/pool.d/dream-team.conf"
-if [[ -f "$pool" ]] && ! grep -q 'sendmail_path' "$pool"; then
-  printf '\nphp_admin_value[sendmail_path] = "/usr/sbin/sendmail -t -i"\n' >> "$pool"
-  systemctl restart php8.3-fpm
-fi
+bash "${ROOT}/postfix/enable-with-site.sh"
 
 printf 'Subject: Q digest\nFrom: %s\nTo: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n\nПроверка почтового агента qdigest.ru.\n' \
   "$MAILBOX" "$MAILBOX" | /usr/sbin/sendmail -t -i -f "$MAILBOX"
