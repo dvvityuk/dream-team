@@ -19,11 +19,14 @@ if ! flock -n 9; then
   exit 0
 fi
 
-running="$(docker inspect -f '{{.State.Running}}' qdigest 2>/dev/null || true)"
-if [[ "$running" != "true" ]]; then
-  echo "Контейнер qdigest не запущен. Отправка пропущена."
-  exit 0
+if [[ ! -f /.dockerenv ]]; then
+  running="$(docker inspect -f '{{.State.Running}}' qdigest 2>/dev/null || true)"
+  if [[ "$running" != "true" ]]; then
+    echo "Контейнер qdigest не запущен. Отправка пропущена."
+    exit 0
+  fi
 fi
+git config --global --get-all safe.directory 2>/dev/null | grep -qx "$ROOT" || git config --global --add safe.directory "$ROOT"
 
 cred="$ROOT/data/github-push.env"
 if [[ ! -f "$cred" ]]; then

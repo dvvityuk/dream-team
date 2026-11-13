@@ -5,6 +5,8 @@ services:
     container_name: qdigest
     ports:
       - "${QDIGEST_PORT:-80}:80"
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
     volumes:
       - .:/var/www/dream-team
     restart: unless-stopped

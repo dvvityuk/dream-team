@@ -6,7 +6,11 @@ RUN printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         nginx \
         postfix \
+        libsasl2-modules \
         ca-certificates \
+        cron \
+        git \
+        tzdata \
         libjpeg62-turbo-dev \
         libpng-dev \
         libwebp-dev \

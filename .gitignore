@@ -3,6 +3,7 @@ data/mail/
 data/logs/
 data/php-error.log
 data/github-push.env
+data/mail-relay.env
 *.log
 .DS_Store
 Thumbs.db
