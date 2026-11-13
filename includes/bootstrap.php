@@ -141,18 +141,6 @@ function connection_is_tls(): bool
     return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
 }
 
-function connection_is_tls(): bool
-{
-    if (strtolower((string) ($_SERVER['QDIGEST_HTTPS'] ?? '')) === 'on') {
-        return true;
-    }
-    $https = strtolower((string) ($_SERVER['HTTPS'] ?? ''));
-    if ($https === 'on' || $https === '1') {
-        return true;
-    }
-    return strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https';
-}
-
 function browser_scheme(): string
 {
     $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
