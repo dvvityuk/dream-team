@@ -2,6 +2,11 @@
 require __DIR__ . '/includes/bootstrap.php';
 require_once __DIR__ . '/includes/layout.php';
 require_once __DIR__ . '/includes/staff.php';
+require_once __DIR__ . '/includes/storytelling.php';
+if (is_admin() && empty($_SESSION['storytelling_csrf'])) {
+    $_SESSION['storytelling_csrf'] = bin2hex(random_bytes(32));
+}
+$storyToken = $_SESSION['storytelling_csrf'] ?? '';
 require_login();
 if (!is_admin()) {
     redirect_to('index.php');
@@ -22,20 +27,35 @@ if ($employeesJson === false) {
     $employeesJson = '[]';
 }
 $dateText = htmlspecialchars(header_date_read(), ENT_QUOTES, 'UTF-8');
+$story = storytelling_load($directory);
+$storyPeople = storytelling_people($directory, $story);
 layout_start('Редактирование — Q digest', 'edit');
 ?>
     <header class="hero">
       <div class="hero-copy">
         <p class="eyebrow">Admin</p>
         <h1>Редактирование</h1>
-        <p class="hero-lead">Список сотрудников, карточки Q digest и настройки контура.</p>
+        <p class="hero-lead">Список сотрудников, Storytelling, карточки Q digest и настройки.</p>
       </div>
     </header>
 
+    <section id="home-image-panel" class="admin-panel">
+      <h2>Изображение главной страницы</h2>
+      <img class="staff-preview" id="home-image-preview" src="<?= asset_href(home_image()) ?>" alt="Текущее изображение главной страницы">
+      <form id="home-image-form" method="post" action="save_home_image.php" enctype="multipart/form-data">
+        <input type="hidden" name="csrf" value="<?= storytelling_escape($storyToken) ?>">
+        <label for="home-image-upload">JPEG, PNG, GIF, WebP или AVIF до 8 МБ</label>
+        <input id="home-image-upload" name="image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" required>
+        <button type="submit" class="btn">Сохранить изображение главной</button>
+        <p role="status"></p>
+      </form>
+    </section>
+
     <section id="staff-panel" class="admin-panel">
       <h2>Список сотрудников</h2>
-      <p class="panel-note">Фамилия, имя, должность и фото. Отсюда берутся люди для Q digest и storytelling.</p>
+      <p class="panel-note">Фамилия, имя, должность и фото. Отсюда можно добавить сотрудников в Q digest и Storytelling.</p>
       <form id="staff-form">
+        <input type="hidden" name="csrf" value="<?= storytelling_escape($storyToken) ?>">
         <input type="hidden" id="staff-edit-id" value="">
         <input type="text" id="staff-last" placeholder="Фамилия" required maxlength="80">
         <input type="text" id="staff-first" placeholder="Имя" required maxlength="80">
@@ -52,6 +72,8 @@ layout_start('Редактирование — Q digest', 'edit');
       </form>
       <div id="staff-list"></div>
     </section>
+
+    <?php require __DIR__ . '/includes/storytelling-editor.php'; ?>
 
     <section id="admin-panel" class="admin-panel">
       <h2>Q digest</h2>
@@ -114,4 +136,5 @@ layout_start('Редактирование — Q digest', 'edit');
     </section>
     <script type="application/json" id="staff-bootstrap"><?= $staffJson ?></script>
     <script type="application/json" id="employees-bootstrap"><?= $employeesJson ?></script>
+<script src="<?= asset_href('story-editor.js') ?>" defer></script>
 <?php layout_end('script.js'); ?>

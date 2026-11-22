@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   let employees = [];
   let staffPeople = [];
-  let isUploading = false;
 
   function readEmbedded(id) {
     const node = document.getElementById(id);
@@ -135,44 +134,13 @@ document.addEventListener('DOMContentLoaded', function () {
       .catch(function () {});
   }
 
-  function uploadImage(fileInput, pathInput, button, label) {
-    if (!fileInput.files || !fileInput.files[0]) return;
-    if (isUploading) {
-      showNotification('Дождитесь завершения загрузки', 'error');
-      return;
-    }
-    isUploading = true;
-    button.textContent = 'Загрузка...';
-    button.disabled = true;
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
-    fetch('upload_image.php', { method: 'POST', body: formData })
-      .then(readJson)
-      .then(function (data) {
-        if (!data) return;
-        if (data.success) {
-          pathInput.value = data.path;
-          showNotification('Фото загружено', 'success');
-        } else {
-          showNotification(data.error || 'Ошибка загрузки', 'error');
-        }
-      })
-      .catch(function () {
-        showNotification('Ошибка при загрузке изображения', 'error');
-      })
-      .finally(function () {
-        isUploading = false;
-        button.textContent = label;
-        button.disabled = false;
-        fileInput.value = '';
-      });
-  }
-
   staffChooseImage?.addEventListener('click', function () {
     staffImageUpload.click();
   });
   staffImageUpload?.addEventListener('change', function () {
-    uploadImage(staffImageUpload, staffImage, staffChooseImage, 'Выбрать фото');
+    if (staffImageUpload.files[0]) {
+      staffImage.value = staffImageUpload.files[0].name;
+    }
   });
 
   function resetStaffForm() {
@@ -212,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderStaffList();
     refreshSelects();
     renderEmployeeList();
+    document.dispatchEvent(new CustomEvent('staff-updated', { detail: staffPeople }));
   }
 
   staffForm?.addEventListener('submit', function (event) {
@@ -227,16 +196,16 @@ document.addEventListener('DOMContentLoaded', function () {
         image: staffImage.value.trim()
       }
     };
-    if (!safeImage(payload.person.image)) {
+    const image = staffImageUpload.files[0];
+    if (!image && !safeImage(payload.person.image)) {
       showNotification('Загрузите фото', 'error');
       return;
     }
+    const values = new FormData(staffForm);
+    values.append('payload', JSON.stringify(payload));
+    if (image) values.append('image', image);
     staffSubmit.disabled = true;
-    fetch('save_staff.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
+    fetch('save_staff.php', { method: 'POST', body: values })
       .then(readJson)
       .then(function (data) {
         if (!data) return;
@@ -268,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
       staffLast.value = person.lastName;
       staffFirst.value = person.firstName;
       staffPosition.value = person.position;
+      staffImageUpload.value = '';
       staffImage.value = person.image;
       staffSubmit.textContent = 'Сохранить сотрудника';
       staffCancel.hidden = false;

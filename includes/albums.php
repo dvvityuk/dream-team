@@ -18,9 +18,7 @@ function albums_read(): array
 {
     $path = albums_path();
     if (!is_file($path)) {
-        $empty = ['folders' => []];
-        file_put_contents($path, json_encode($empty, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
-        return $empty;
+        return ['folders' => []];
     }
     $data = json_decode((string) file_get_contents($path), true);
     if (!is_array($data) || !isset($data['folders']) || !is_array($data['folders'])) {
@@ -32,7 +30,7 @@ function albums_read(): array
 function albums_write(array $data): bool
 {
     $json = json_encode(['folders' => array_values($data['folders'] ?? [])], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    return file_put_contents(albums_path(), $json, LOCK_EX) !== false;
+    return $json !== false && write_project_file(albums_path(), $json . "\n");
 }
 
 function valid_folder_id(string $id): bool
@@ -94,13 +92,6 @@ function delete_stored_photo(string $folderId, string $file): void
     if ($real !== false && $root !== false && path_is_inside($real, $root) && is_file($real)) {
         unlink($real);
     }
-    $publicImage = 'images/' . $file;
-    foreach (employees_read() as $employee) {
-        if ($employee['image'] === $publicImage) {
-            return;
-        }
-    }
-    delete_public_image($publicImage);
 }
 
 function remove_tree(string $dir): void
@@ -117,7 +108,7 @@ function remove_tree(string $dir): void
             continue;
         }
         $path = $dir . '/' . $item;
-        if (is_dir($path)) {
+        if (is_dir($path) && !is_link($path)) {
             remove_tree($path);
         } else {
             unlink($path);

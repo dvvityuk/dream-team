@@ -6,6 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['image'])) {
     json_response(['success' => false, 'error' => 'Файл не передан'], 400);
 }
 
+lock_project_storage();
 $file = $_FILES['image'];
 if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
     json_response(['success' => false, 'error' => 'Ошибка загрузки файла'], 400);

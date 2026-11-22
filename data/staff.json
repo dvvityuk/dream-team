@@ -61,6 +61,18 @@
                 "client": "",
                 "flavor": ""
             }
+        },
+        {
+            "lastName": "Кибец",
+            "firstName": "Дмитрий",
+            "position": "SSE",
+            "image": "images\/61e4a130f3746874.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            },
+            "id": "3cc27be224783854"
         }
     ]
 }

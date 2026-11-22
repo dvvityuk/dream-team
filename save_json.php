@@ -12,6 +12,7 @@ if (!is_array($data)) {
     json_response(['success' => false, 'error' => 'Некорректный JSON'], 400);
 }
 
+lock_project_storage();
 $directory = staff_load();
 $known = [];
 foreach ($directory['people'] as $person) {

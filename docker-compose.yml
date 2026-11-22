@@ -9,6 +9,13 @@ services:
       TZ: ${TZ:-Europe/Berlin}
     volumes:
       - .:/var/www/dream-team
+    tmpfs:
+      - /var/cache/nginx
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/login.php') === false ? 1 : 0);"]

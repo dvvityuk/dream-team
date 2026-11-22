@@ -31,10 +31,8 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/dream-team.conf
 COPY docker/nginx.conf /etc/nginx/sites-enabled/qdigest.conf
 COPY docker/entrypoint.sh /usr/local/bin/qdigest-entrypoint
 COPY nginx/qdigest-site.conf /etc/nginx/snippets/qdigest-site.conf
-COPY . /var/www/dream-team
 
-RUN chmod 755 /usr/local/bin/qdigest-entrypoint \
-    && mkdir -p /var/www/dream-team/data/sessions /var/www/dream-team/data/logs /var/www/dream-team/data/mail/feedback/cur /var/www/dream-team/data/mail/feedback/new /var/www/dream-team/data/mail/feedback/tmp /var/www/dream-team/images
+RUN chmod 755 /usr/local/bin/qdigest-entrypoint
 
 EXPOSE 80
 

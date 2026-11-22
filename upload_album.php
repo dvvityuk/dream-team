@@ -17,6 +17,7 @@ if (!valid_folder_id($id) || !isset($_FILES['photos'])) {
     json_response(['success' => false, 'error' => 'Выберите папку и фотографии'], 400);
 }
 
+lock_project_storage();
 $data = albums_read();
 $index = folder_index($data, $id);
 if ($index < 0) {

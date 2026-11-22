@@ -35,7 +35,6 @@ render_head('Вход — Q digest');
         <em>dream team</em>
       </div>
     </div>
-    <p class="eyebrow">Закрытый контур</p>
     <h1>Вход</h1>
     <p class="login-lead">Аккаунт expert открывает просмотр. Аккаунт admin добавляет редактирование.</p>
     <?php if ($error !== ''): ?>

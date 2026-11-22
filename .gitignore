@@ -1,6 +1,8 @@
 data/sessions/
 data/mail/
 data/logs/
+data/.storytelling.lock
+data/.story-*
 data/php-error.log
 data/github-push.env
 data/mail-relay.env
@@ -10,3 +12,6 @@ Thumbs.db
 desktop.ini
 .idea/
 .vscode/
+data/.storage.lock
+.qdigest-*
+data/cache/

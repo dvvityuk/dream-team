@@ -63,16 +63,7 @@ function staff_write(array $directory): bool
     if ($json === false) {
         return false;
     }
-    $path = staff_path();
-    $tmp = $path . '.tmp';
-    if (file_put_contents($tmp, $json . "\n", LOCK_EX) === false) {
-        return false;
-    }
-    if (!rename($tmp, $path)) {
-        @unlink($tmp);
-        return false;
-    }
-    return true;
+    return write_project_file(staff_path(), $json . "\n");
 }
 
 function digest_path(): string
@@ -96,7 +87,7 @@ function digest_write(array $cards): bool
     if ($json === false) {
         return false;
     }
-    return file_put_contents(digest_path(), $json . "\n", LOCK_EX) !== false;
+    return write_project_file(digest_path(), $json . "\n");
 }
 
 function staff_migrate_from_digest(): array

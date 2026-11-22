@@ -54,6 +54,7 @@ function layout_start(string $title, string $active): void
     $user = htmlspecialchars((string) current_user(), ENT_QUOTES, 'UTF-8');
     $role = is_admin() ? 'полный доступ' : 'только просмотр';
     $bodyClass = is_admin() ? 'is-admin' : 'is-expert';
+    $home = $active === 'home' ? ' class="active" aria-current="page"' : '';
     $digest = $active === 'digest' ? ' class="active" aria-current="page"' : '';
     $story = $active === 'story' ? ' class="active" aria-current="page"' : '';
     $team = $active === 'team' ? ' class="active" aria-current="page"' : '';
@@ -63,16 +64,17 @@ function layout_start(string $title, string $active): void
     echo <<<HTML
 <body class="{$bodyClass}">
   <aside id="sidebar" class="sidebar">
-    <div class="brand">
+    <a class="brand" href="index.php" aria-label="Q digest — главная страница">
       <span class="brand-mark" aria-hidden="true"></span>
       <div>
         <strong>Q digest</strong>
         <em>dream team</em>
       </div>
-    </div>
+    </a>
     <nav class="side-nav">
-      <a href="index.php"{$digest}>Q digest</a>
-      <a href="storytelling.php"{$story}>storytelling</a>
+      <a href="index.php"{$home}>Главная</a>
+      <a href="q-digest.php"{$digest}>Q digest</a>
+      <a href="storytelling.php"{$story}>Storytelling</a>
       <a href="team-building.php"{$team}>Team building</a>
       {$editLink}
     </nav>

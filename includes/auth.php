@@ -73,7 +73,7 @@ function is_admin(): bool
 function safe_next(?string $next): string
 {
     $next = basename((string) $next);
-    if (!in_array($next, ['index.php', 'team-building.php', 'storytelling.php', 'edit.php'], true)) {
+    if (!in_array($next, ['index.php', 'q-digest.php', 'team-building.php', 'storytelling.php', 'edit.php'], true)) {
         return 'index.php';
     }
     return $next;
@@ -94,7 +94,7 @@ function require_login(): void
         return;
     }
     $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
-    $page = in_array($script, ['index.php', 'team-building.php'], true);
+    $page = in_array($script, ['index.php', 'q-digest.php', 'team-building.php', 'storytelling.php'], true);
     if ($page && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
         redirect_to('login.php?next=' . rawurlencode($script));
     }

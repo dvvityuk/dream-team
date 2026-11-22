@@ -65,6 +65,9 @@ function delete_public_image(string $relative): void
     if (!preg_match('#^images/[A-Za-z0-9._-]+$#', $relative)) {
         return;
     }
+    if (is_link(app_root() . '/' . $relative)) {
+        return;
+    }
     $root = realpath(app_root() . '/images');
     $path = realpath(app_root() . '/' . $relative);
     if ($root === false || $path === false || !is_file($path)) {
@@ -236,6 +239,10 @@ function session_directory(): ?string
     return null;
 }
 
+require_once __DIR__ . '/storage.php';
+if (defined('QDIGEST_MAINTENANCE')) {
+    return;
+}
 project_logs_prune();
 
 if (session_status() === PHP_SESSION_ACTIVE) {

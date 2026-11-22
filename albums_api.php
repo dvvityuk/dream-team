@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['success' => false, 'error' => 'Неверный метод'], 405);
 }
 
+lock_project_storage();
 $body = read_json_body();
 $action = (string) ($body['action'] ?? '');
 $data = albums_read();

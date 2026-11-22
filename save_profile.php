@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $body = read_json_body();
 $id = trim((string) ($body['id'] ?? ''));
 $incoming = is_array($body['answers'] ?? null) ? $body['answers'] : [];
+lock_project_storage();
 $directory = staff_load();
 $found = false;
 foreach ($directory['people'] as $index => $person) {

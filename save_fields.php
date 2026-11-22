@@ -16,6 +16,7 @@ if (count($incoming) > 20) {
     json_response(['success' => false, 'error' => 'Слишком много полей'], 400);
 }
 
+lock_project_storage();
 $directory = staff_load();
 $existing = [];
 foreach ($directory['fields'] as $field) {
