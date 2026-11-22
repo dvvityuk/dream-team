@@ -17,23 +17,28 @@ layout_start('Q digest', 'digest');
       <?php if ($employees === []): ?>
         <p class="empty-message">В Q digest пока нет карточек.</p>
       <?php else: ?>
-        <?php foreach ($employees as $employee): ?>
-          <article class="employee-card">
+        <?php foreach (array_values($employees) as $index => $employee): ?>
+          <article class="employee-card digest-card">
             <?php if (preg_match('#^images/[A-Za-z0-9._-]+$#', $employee['image'])): ?>
-              <button type="button" class="photo-open digest-photo-open" aria-haspopup="dialog" aria-controls="digest-photo">
-                <img src="<?= htmlspecialchars($employee['image'], ENT_QUOTES, 'UTF-8') ?>" alt="Фото <?= htmlspecialchars($employee['name'], ENT_QUOTES, 'UTF-8') ?>">
-              </button>
+              <img src="<?= htmlspecialchars($employee['image'], ENT_QUOTES, 'UTF-8') ?>" alt="Фото <?= htmlspecialchars($employee['name'], ENT_QUOTES, 'UTF-8') ?>">
             <?php endif; ?>
-            <h2><?= htmlspecialchars($employee['name'], ENT_QUOTES, 'UTF-8') ?></h2>
+            <h2 id="digest-hero-<?= $index ?>"><?= htmlspecialchars($employee['name'], ENT_QUOTES, 'UTF-8') ?></h2>
             <p><?= htmlspecialchars($employee['achievements'], ENT_QUOTES, 'UTF-8') ?></p>
+            <button type="button" class="digest-card-open" aria-labelledby="digest-hero-<?= $index ?>" aria-haspopup="dialog" aria-controls="digest-hero"></button>
           </article>
         <?php endforeach; ?>
       <?php endif; ?>
     </section>
-    <dialog id="digest-photo" class="lightbox digest-lightbox" aria-label="Просмотр фотографии">
-      <img alt="">
+    <dialog id="digest-hero" class="lightbox digest-lightbox" aria-labelledby="digest-hero-name">
+      <div class="digest-lightbox-content">
+        <img alt="" hidden>
+        <div class="digest-lightbox-copy">
+          <h2 id="digest-hero-name"></h2>
+          <p></p>
+        </div>
+      </div>
       <form method="dialog">
-        <button type="submit" class="lightbox-close" aria-label="Закрыть фото" autofocus>&times;</button>
+        <button type="submit" class="lightbox-close" aria-label="Закрыть карточку" autofocus>&times;</button>
       </form>
     </dialog>
 <?php layout_end('q-digest.js'); ?>

@@ -99,8 +99,10 @@ function layout_end(string $script = ''): void
     $theme = asset_href('theme.js');
     $ui = asset_href('ui.js');
     $feedback = asset_href('feedback.js');
+    $motion = asset_href('motion.js');
     echo <<<HTML
   </div>
+  <div class="reading-progress" aria-hidden="true"></div>
   <div id="feedback-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title" hidden>
     <div class="modal-content">
       <button type="button" class="close-modal" aria-label="Закрыть">&times;</button>
@@ -124,6 +126,7 @@ function layout_end(string $script = ''): void
   <script src="{$ui}"></script>
   <script src="{$feedback}"></script>
   {$pageScript}
+  <script src="{$motion}"></script>
   <script>
     var sidebar = document.getElementById('sidebar');
     document.getElementById('menu-toggle')?.addEventListener('click', function () {

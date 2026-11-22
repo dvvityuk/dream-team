@@ -28,6 +28,11 @@
   --shadow: rgba(0, 0, 0, 0.35);
   --sidebar: 272px;
   --font: "IQOS", "Manrope", "Segoe UI", sans-serif;
+  --motion-fast: 230ms;
+  --motion-panel: 320ms;
+  --motion-section: 660ms;
+  --ease-out: cubic-bezier(0.22, 0.8, 0.25, 1);
+  --ease-spring: cubic-bezier(0.2, 0.8, 0.28, 1.35);
   color-scheme: dark;
 }
 
@@ -332,12 +337,6 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
 
 .employee-card {
   padding: 14px 14px 18px;
-  transition: transform 0.25s ease, border-color 0.25s ease;
-}
-
-.employee-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--line);
 }
 
 button.story-card {
@@ -439,9 +438,6 @@ button.story-card {
 @keyframes story-questions-reveal {
   from { visibility: hidden; opacity: 0; }
   to { visibility: visible; opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .story-feature .story-questions { animation-duration: 0s; }
 }
 .story-feature .story-question {
   border: 0;
@@ -646,7 +642,20 @@ input:focus, textarea:focus, select:focus {
 
 .photo-card { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .photo-open { padding: 0; border: 0; background: transparent; cursor: zoom-in; border-radius: 18px; }
-.digest-photo-open { display: block; width: 100%; }
+.digest-card { position: relative; }
+
+.digest-card-open {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.digest-card-open:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 .folder-title { margin-top: 18px; }
 
@@ -715,12 +724,53 @@ html:has(.lightbox[open]) { overflow: hidden; }
 
 .digest-lightbox { background: transparent; }
 .digest-lightbox::backdrop { background: rgba(0, 0, 0, 0.68); }
-.digest-lightbox[open] { display: grid; place-items: center; }
+.digest-lightbox[open] {
+  display: grid;
+  justify-items: center;
+  padding: 58px clamp(10px, 3vw, 40px) 16px;
+}
 .digest-lightbox form { display: contents; }
-.digest-lightbox img {
-  max-width: min(90vw, 960px);
-  max-height: 82dvh;
-  border-radius: 12px;
+
+.digest-lightbox-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(16px, 4vw, 56px);
+  width: 50%;
+  min-height: 0;
+  padding: clamp(16px, 4vw, 52px);
+  overflow: auto;
+  border-radius: 20px;
+  background: var(--bg-2);
+  color: var(--ivory);
+}
+
+.digest-lightbox-content:has(img[hidden]) { grid-template-columns: minmax(0, 1fr); }
+
+.digest-lightbox-content img {
+  width: 100%;
+  max-height: 68dvh;
+  object-fit: contain;
+  border-radius: 16px;
+}
+
+.digest-lightbox-copy h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.digest-lightbox-copy p {
+  margin: 0;
+  font-size: 2em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .digest-lightbox-content { grid-template-columns: minmax(0, 1fr); }
+  .digest-lightbox-content img { max-height: 45dvh; }
 }
 
 .lightbox-stage.is-zoomed { cursor: grab; }
@@ -798,6 +848,151 @@ html:has(.lightbox[open]) { overflow: hidden; }
   .employee-item { flex-direction: column; align-items: stretch; }
 }
 
+.reading-progress {
+  position: fixed;
+  z-index: 35;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent);
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+:is(.btn, .menu-toggle, .theme-switch button, .story-question, .photo-open,
+    .close-modal, .lightbox button, .side-nav a, .brand-mark, .brand-mark::after) {
+  transition: scale var(--motion-fast) var(--ease-spring),
+              translate var(--motion-fast) var(--ease-spring),
+              rotate var(--motion-fast) var(--ease-out),
+              opacity var(--motion-fast) var(--ease-out),
+              border-color var(--motion-fast) var(--ease-out);
+}
+
+.theme-switch button {
+  transition: scale var(--motion-fast) var(--ease-spring),
+              background-color var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out);
+}
+
+:is(.employee-card, .folder-card, .photo-card img, .photo-open) {
+  transition: transform var(--motion-fast) var(--ease-spring),
+              scale var(--motion-fast) var(--ease-spring),
+              border-color var(--motion-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  :is(.btn, .menu-toggle, .story-question, .close-modal, .lightbox button):hover:not(:disabled) {
+    translate: 0 -2px;
+  }
+
+  :is(.employee-card, .folder-card):hover {
+    transform: translateY(-4px);
+    border-color: var(--line);
+  }
+
+  .photo-card .photo-open:hover img { transform: scale(1.025); }
+  .side-nav a:hover { translate: 3px; }
+  .brand:hover .brand-mark { scale: 1.08; }
+  .brand:hover .brand-mark::after { rotate: 18deg; }
+}
+
+:is(.btn, .menu-toggle, .theme-switch button, .story-question, .folder-card,
+    .photo-open, .close-modal, .lightbox button):active:not(:disabled),
+.brand:active .brand-mark {
+  translate: 0;
+  scale: 0.97;
+}
+
+:is(.employee-card, .folder-card):focus-within { border-color: var(--accent-text); }
+
+@keyframes section-enter {
+  from { opacity: 0; translate: 0 14px; }
+}
+
+.motion-reveal,
+.page-head > *,
+.hero-copy > *,
+.home-poster {
+  animation: section-enter var(--motion-section) var(--ease-out) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+:is(.page-head, .hero-copy) > :nth-child(2) { --reveal-delay: 55ms; }
+:is(.page-head, .hero-copy) > :nth-child(n+3) { --reveal-delay: 110ms; }
+
+:is(.motion-reveal, .page-head > *, .hero-copy > *):focus-within { animation: none; }
+
+@keyframes modal-enter {
+  from { opacity: 0; }
+}
+
+@keyframes panel-enter {
+  from { opacity: 0; translate: 0 10px; scale: 0.98; }
+}
+
+.modal:not([hidden]), .lightbox[open], dialog[open]::backdrop {
+  animation: modal-enter var(--motion-panel) var(--ease-out);
+}
+
+.modal:not([hidden]) .modal-content,
+.story-native-dialog[open], .digest-lightbox[open] .digest-lightbox-content {
+  animation: panel-enter var(--motion-panel) var(--ease-out);
+}
+
+@supports (transition-behavior: allow-discrete) {
+  .modal,
+  :is(.lightbox, .story-native-dialog) {
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease-out),
+                display var(--motion-fast) allow-discrete,
+                overlay var(--motion-fast) allow-discrete;
+  }
+
+  .modal:not([hidden]), :is(.lightbox, .story-native-dialog)[open] { opacity: 1; }
+
+  .modal:not([hidden]), .lightbox[open] { animation: none; }
+
+  @starting-style {
+    .modal:not([hidden]), :is(.lightbox, .story-native-dialog)[open] { opacity: 0; }
+  }
+
+  dialog::backdrop {
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease-out),
+                display var(--motion-fast) allow-discrete,
+                overlay var(--motion-fast) allow-discrete;
+  }
+
+  dialog[open]::backdrop { opacity: 1; animation: none; }
+
+  @starting-style {
+    dialog[open]::backdrop { opacity: 0; }
+  }
+}
+
+@view-transition { navigation: auto; }
+
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration: var(--motion-panel);
+  animation-timing-function: var(--ease-out);
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  *, *::before, *::after, *::backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+
+  :is(.employee-card, .folder-card, .photo-card img, .photo-open, .btn, .menu-toggle,
+      .story-question, .theme-switch button, .close-modal, .lightbox button, .side-nav a,
+      .brand-mark, .brand-mark::after) {
+    scale: none !important;
+    translate: none !important;
+    rotate: none !important;
+  }
+
+  :is(.employee-card, .folder-card, .photo-card img) { transform: none !important; }
 }

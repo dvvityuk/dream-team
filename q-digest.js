@@ -1,15 +1,24 @@
-const digestPhoto = document.getElementById('digest-photo');
-const digestImage = digestPhoto.querySelector('img');
+const digestHero = document.getElementById('digest-hero');
+const digestContent = digestHero.querySelector('.digest-lightbox-content');
+const digestImage = digestContent.querySelector('img');
+const digestName = digestContent.querySelector('h2');
+const digestText = digestContent.querySelector('p');
 
-document.querySelectorAll('.digest-photo-open').forEach(function (button) {
+document.querySelectorAll('.digest-card-open').forEach(function (button) {
   button.addEventListener('click', function () {
-    const avatar = button.querySelector('img');
-    digestImage.src = avatar.src;
-    digestImage.alt = avatar.alt;
-    digestPhoto.showModal();
+    const card = button.closest('.digest-card');
+    const avatar = card.querySelector('img');
+    if (avatar) digestImage.src = avatar.src;
+    else digestImage.removeAttribute('src');
+    digestImage.alt = avatar?.alt ?? '';
+    digestImage.hidden = !avatar;
+    digestName.textContent = card.querySelector('h2').textContent;
+    digestText.textContent = card.querySelector('p').textContent;
+    digestHero.showModal();
+    digestContent.scrollTop = 0;
   });
 });
 
-digestPhoto.addEventListener('click', function (event) {
-  if (event.target === digestPhoto) digestPhoto.close();
+digestHero.addEventListener('click', function (event) {
+  if (event.target === digestHero) digestHero.close();
 });
