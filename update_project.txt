@@ -1,3 +1,5 @@
+# Обновление проекта dream-team на сервере
+
 sudo apt update
 sudo apt install -y nginx php8.3-fpm php8.3-cli certbot
 
