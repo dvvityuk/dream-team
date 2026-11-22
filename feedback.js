@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const submitBtn = form.querySelector('button[type="submit"]');
   const messageField = document.getElementById('feedback-message');
   const status = document.getElementById('feedback-status');
+  const result = document.getElementById('feedback-result');
+  const resultTitle = document.getElementById('feedback-result-title');
+  const resultMessage = document.getElementById('feedback-result-message');
   let opener;
 
   function openModal(event) {
@@ -20,6 +23,20 @@ document.addEventListener('DOMContentLoaded', function () {
     modal.hidden = true;
     opener?.focus();
   }
+
+  function showResult(sent, message) {
+    if (sent) {
+      form.reset();
+      closeModal();
+    }
+    resultTitle.textContent = sent ? 'Сообщение отправлено' : 'Не удалось отправить';
+    resultMessage.textContent = message;
+    result.showModal();
+  }
+
+  result.addEventListener('close', function () {
+    if (!modal.hidden) messageField.focus();
+  });
 
   document.querySelectorAll('.js-feedback').forEach(function (button) {
     button.addEventListener('click', openModal);
@@ -38,16 +55,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const message = messageField.value.trim();
     if (!message || Array.from(message).length > 5000) {
-      status.textContent = message
+      showResult(false, message
         ? 'Максимальная длина сообщения — 5000 символов'
-        : 'Введите текст пожелания';
-      messageField.focus();
+        : 'Введите текст пожелания');
       return;
     }
 
     submitBtn.disabled = true;
     messageField.readOnly = true;
     status.textContent = 'Отправка…';
+    let notice;
+    let sent = false;
     try {
       const response = await fetch('send_feedback.php', {
         method: 'POST',
@@ -55,22 +73,21 @@ document.addEventListener('DOMContentLoaded', function () {
         body: JSON.stringify({ message })
       });
       if (response.status === 401) {
-        status.textContent = 'Сессия завершилась. Войдите в другой вкладке и повторите отправку.';
-        return;
-      }
-
-      const data = await response.json();
-      if (response.ok && data.success === true) {
-        form.reset();
-        status.textContent = 'Сервер принял сообщение.';
+        notice = 'Сессия завершилась. Войдите в другой вкладке и повторите отправку.';
       } else {
-        status.textContent = data.error || 'Не удалось отправить сообщение. Попробуйте ещё раз.';
+        const data = await response.json();
+        sent = response.ok && data.success === true;
+        notice = sent
+          ? 'Почтовый сервер принял письмо к доставке.'
+          : data.error || 'Не удалось отправить сообщение. Попробуйте ещё раз.';
       }
     } catch {
-      status.textContent = 'Не удалось получить ответ сервера. Текст сохранён в форме.';
+      notice = 'Не удалось получить ответ сервера. Текст сохранён в форме.';
     } finally {
       submitBtn.disabled = false;
       messageField.readOnly = false;
+      status.textContent = '';
     }
+    showResult(sent, notice);
   });
 });

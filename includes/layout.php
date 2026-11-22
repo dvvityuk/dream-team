@@ -113,6 +113,13 @@ function layout_end(string $script = ''): void
       </form>
     </div>
   </div>
+  <dialog id="feedback-result" class="modal-content story-native-dialog" aria-labelledby="feedback-result-title" aria-describedby="feedback-result-message">
+    <h2 id="feedback-result-title"></h2>
+    <p id="feedback-result-message" class="modal-note"></p>
+    <form method="dialog">
+      <button type="submit" class="btn" autofocus>Понятно</button>
+    </form>
+  </dialog>
   <script src="{$theme}"></script>
   <script src="{$ui}"></script>
   <script src="{$feedback}"></script>

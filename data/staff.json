@@ -16,10 +16,10 @@
     "people": [
         {
             "id": "95f5bab969d1c09f",
-            "lastName": "Крутченко",
+            "lastName": "Галушка",
             "firstName": "Ксения",
             "position": "SE",
-            "image": "images\/97aa84c6d58f22b4.jpg",
+            "image": "images\/33465696201794a1.jpg",
             "answers": {
                 "iqos": "",
                 "client": "",
@@ -31,7 +31,7 @@
             "lastName": "Самойлова",
             "firstName": "Юлия",
             "position": "SSE",
-            "image": "images\/7834321608dea90d.jpg",
+            "image": "images\/79e99ceef67160a5.jpg",
             "answers": {
                 "iqos": "",
                 "client": "",
@@ -40,10 +40,10 @@
         },
         {
             "id": "d3e41e518519305b",
-            "lastName": "Михайлова",
-            "firstName": "Полина",
-            "position": "SE",
-            "image": "images\/cb5dfdce7c9079f4.jpg",
+            "lastName": "Хвостова",
+            "firstName": "Олеся",
+            "position": "SSE",
+            "image": "images\/78c2dd235adab45d.jpg",
             "answers": {
                 "iqos": "",
                 "client": "",
@@ -52,10 +52,10 @@
         },
         {
             "id": "ea5f96bdb22e94e4",
-            "lastName": "Логунова",
+            "lastName": "Тарада",
             "firstName": "Анастасия",
             "position": "SSE",
-            "image": "images\/80d0eb615f7da219.jpg",
+            "image": "images\/92bb626a46757f56.jpg",
             "answers": {
                 "iqos": "",
                 "client": "",
@@ -63,6 +63,7 @@
             }
         },
         {
+            "id": "3cc27be224783854",
             "lastName": "Кибец",
             "firstName": "Дмитрий",
             "position": "SSE",
@@ -71,8 +72,55 @@
                 "iqos": "",
                 "client": "",
                 "flavor": ""
+            }
+        },
+        {
+            "id": "b1d6ba99d31bc700",
+            "lastName": "Киселева",
+            "firstName": "Виктория",
+            "position": "SE",
+            "image": "images\/286a654e79c0f87b.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "id": "421a09988e30a441",
+            "lastName": "Носкова",
+            "firstName": "Яна",
+            "position": "SE",
+            "image": "images\/649d9cd5a11ece0c.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "id": "de18c9de0ce65ae2",
+            "lastName": "Оболгана",
+            "firstName": "Юлия",
+            "position": "JSE",
+            "image": "images\/dea17315d8f9968d.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
+            }
+        },
+        {
+            "lastName": "Батозский",
+            "firstName": "Никита",
+            "position": "SSE",
+            "image": "images\/9fa4fb7c9e61116b.jpg",
+            "answers": {
+                "iqos": "",
+                "client": "",
+                "flavor": ""
             },
-            "id": "3cc27be224783854"
+            "id": "eba264e124f32bd4"
         }
     ]
 }

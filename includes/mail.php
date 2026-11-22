@@ -1,6 +1,6 @@
 <?php
 
-const FEEDBACK_RECEIVER = 'nastasya_zablotskaya@mail.ru';
+const FEEDBACK_DEFAULT_ADDRESS = 'nastasya_zablotskaya@mail.ru';
 
 function mail_settings_path(): string
 {
@@ -10,8 +10,7 @@ function mail_settings_path(): string
 function mail_settings_defaults(): array
 {
     return [
-        'sender' => FEEDBACK_RECEIVER,
-        'receiver' => FEEDBACK_RECEIVER,
+        'sender' => FEEDBACK_DEFAULT_ADDRESS,
         'subject' => 'Анонимное пожелание НАПИШИ МНЕ',
         'app_password' => '',
     ];
@@ -37,7 +36,7 @@ function mail_settings_load(): array
     }
     $sender = clean_header((string) $settings['sender']);
     if (!filter_var($sender, FILTER_VALIDATE_EMAIL)) {
-        $sender = FEEDBACK_RECEIVER;
+        $sender = FEEDBACK_DEFAULT_ADDRESS;
     }
     $subject = clean_header((string) $settings['subject']);
     if ($subject === '') {
@@ -45,7 +44,7 @@ function mail_settings_load(): array
     }
     return [
         'sender' => $sender,
-        'receiver' => FEEDBACK_RECEIVER,
+        'receiver' => $sender,
         'subject' => $subject,
         'app_password' => (string) $settings['app_password'],
     ];
@@ -82,13 +81,16 @@ function send_feedback_smtp(array $settings, string $subject, string $body, arra
     $headers[] = 'To: ' . $settings['receiver'];
     $headers[] = 'Subject: ' . $subject;
     $headers[] = 'Date: ' . date(DATE_RFC2822);
+    $messageId = bin2hex(random_bytes(16)) . '@q-dreamteam.ru';
+    $headers[] = 'Message-ID: <' . $messageId . '>';
     $message = implode("\r\n", $headers) . "\r\n\r\n" . $body . "\r\n";
     fwrite($payload, $message);
     rewind($payload);
 
     $smtp = curl_init('smtps://smtp.mail.ru:465');
+    $smtpReply = '';
     try {
-        return curl_setopt_array($smtp, [
+        $accepted = curl_setopt_array($smtp, [
             CURLOPT_USERNAME => $settings['sender'],
             CURLOPT_PASSWORD => $settings['app_password'],
             CURLOPT_MAIL_FROM => '<' . $settings['sender'] . '>',
@@ -101,7 +103,20 @@ function send_feedback_smtp(array $settings, string $subject, string $body, arra
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADERFUNCTION => static function ($handle, string $line) use (&$smtpReply): int {
+                if (preg_match('/^250 (.+)/', $line, $matches)) {
+                    $smtpReply = trim($matches[1]);
+                }
+                return strlen($line);
+            },
         ]) && curl_exec($smtp) !== false;
+        $smtpCode = curl_getinfo($smtp, CURLINFO_RESPONSE_CODE);
+        if (!$accepted || $smtpCode !== 250) {
+            error_log(sprintf('Feedback SMTP failed: Message-ID <%s>, cURL %d, SMTP %d', $messageId, curl_errno($smtp), $smtpCode));
+            return false;
+        }
+        error_log(sprintf('Feedback SMTP accepted: Message-ID <%s>, SMTP %d %s', $messageId, $smtpCode, $smtpReply));
+        return true;
     } finally {
         fclose($payload);
     }
@@ -114,6 +129,10 @@ function send_feedback_message(string $message): array
         return ['success' => false, 'error' => 'Введите текст пожелания'];
     }
     $settings = mail_settings_load();
+    if ($settings['app_password'] === '') {
+        error_log('Feedback SMTP is not configured: missing application password');
+        return ['success' => false, 'error' => 'Отправка почты не настроена. Обратитесь к администратору.'];
+    }
     $subject = $settings['subject'];
     $encodedSubject = mb_encode_mimeheader($subject, 'UTF-8', 'B', "\r\n", 9);
     $body = str_replace(["\r\n", "\r"], "\n", $message);
@@ -124,13 +143,9 @@ function send_feedback_message(string $message): array
         'Content-Type: text/plain; charset=UTF-8',
         'Content-Transfer-Encoding: quoted-printable',
         'From: ' . $from,
-        'Reply-To: ' . FEEDBACK_RECEIVER,
         'X-Mailer: PHP/' . phpversion(),
     ];
-    $sent = $settings['app_password'] !== ''
-        ? send_feedback_smtp($settings, $encodedSubject, $body, $headers)
-        : mail($settings['receiver'], $encodedSubject, $body, implode("\r\n", $headers));
-    if (!$sent) {
+    if (!send_feedback_smtp($settings, $encodedSubject, $body, $headers)) {
         return ['success' => false, 'error' => 'Почтовый сервер не принял сообщение. Попробуйте ещё раз позже.'];
     }
     return ['success' => true];

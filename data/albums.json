@@ -1,3 +1,79 @@
 {
-    "folders": []
+    "folders": [
+        {
+            "id": "c685020f3847079d",
+            "name": "Главный Герой",
+            "photos": [
+                {
+                    "file": "20dc207e05cb24a9.jpg"
+                },
+                {
+                    "file": "3a39d2a2de5e5fbb.jpg"
+                },
+                {
+                    "file": "761a10a7f47e4b3f.jpg"
+                },
+                {
+                    "file": "9a788cef25321cd8.jpg"
+                },
+                {
+                    "file": "266ead4c72390def.jpg"
+                },
+                {
+                    "file": "d2f36d25a0027258.jpg"
+                },
+                {
+                    "file": "145df97b0290bcfc.jpg"
+                },
+                {
+                    "file": "82bb0f9569d63412.jpg"
+                },
+                {
+                    "file": "b44771aaead5738a.jpg"
+                }
+            ]
+        },
+        {
+            "id": "2bbd7027f2a6c9e1",
+            "name": "ОПГ \"Q\" кальянных Краснодара",
+            "photos": [
+                {
+                    "file": "0b6180f9d1c88822.jpg"
+                },
+                {
+                    "file": "f4fcf4906ec001fb.jpg"
+                },
+                {
+                    "file": "7f1a92b3d1c2c257.jpg"
+                }
+            ]
+        },
+        {
+            "id": "f36bc351943cf6b8",
+            "name": "Летний вайбик",
+            "photos": [
+                {
+                    "file": "5e4d98d42827423a.jpg"
+                },
+                {
+                    "file": "e01debaf83d047cf.jpg"
+                },
+                {
+                    "file": "68d80c21e36b493c.jpg"
+                },
+                {
+                    "file": "7f89ceea3ef496d9.jpg"
+                },
+                {
+                    "file": "857430a2aa5944e6.jpg"
+                },
+                {
+                    "file": "561c0ff5db4d73b6.jpg"
+                },
+                {
+                    "file": "e808b63611282b06.jpg"
+                }
+            ]
+        }
+    ]
 }
