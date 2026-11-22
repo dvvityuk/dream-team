@@ -7,7 +7,7 @@ $poster = home_image();
 $size = @getimagesize(app_root() . '/' . $poster);
 layout_start('Главная — Dream Team', 'home');
 ?>
-    <main>
+    <main class="home-main">
       <img class="home-poster" src="<?= asset_href($poster) ?>"
            <?= $size ? $size[3] : '' ?> alt="Постер команды Dream Team">
     </main>

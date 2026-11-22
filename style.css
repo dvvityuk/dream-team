@@ -243,10 +243,21 @@ html[data-theme="light"] .theme-switch [data-theme-choice="light"] {
 
 h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
 
+.shell:has(.home-main) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  max-width: none;
+  padding: 0;
+}
+
+.home-main { grid-row: 2; min-width: 0; min-height: 0; }
+
 .home-poster {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
 }
 
 .hero, .page-head { margin-bottom: 28px; }
@@ -353,7 +364,7 @@ button.story-card {
 .staff-preview {
   width: 112px;
   height: 112px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 18px;
   background: var(--media-bg);
 }
@@ -399,7 +410,7 @@ button.story-card {
   display: block;
   width: 100%;
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 18px;
   background: var(--media-bg);
 }
@@ -509,6 +520,8 @@ button.story-card {
   background: var(--media-bg);
 }
 
+.employee-card img { object-fit: contain; }
+
 .employee-card h2, .folder-title {
   margin: 14px 8px 6px;
   font-size: 1.15rem;
@@ -602,7 +615,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .employee-info { display: flex; gap: 12px; align-items: center; min-width: 0; }
-.employee-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 16px; }
+.employee-thumb { width: 64px; height: 64px; object-fit: contain; border-radius: 16px; }
 .employee-details h3 { margin: 0 0 4px; font-size: 1rem; }
 .employee-details p { margin: 0; }
 
@@ -633,10 +646,11 @@ input:focus, textarea:focus, select:focus {
 
 .photo-card { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .photo-open { padding: 0; border: 0; background: transparent; cursor: zoom-in; border-radius: 18px; }
+.digest-photo-open { display: block; width: 100%; }
 
 .folder-title { margin-top: 18px; }
 
-.modal, .lightbox {
+.modal {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -649,7 +663,7 @@ input:focus, textarea:focus, select:focus {
 .modal-content { width: min(560px, 100%); padding: 28px; position: relative; }
 .modal-content h2 { margin: 0 0 8px; }
 
-.close-modal, .lightbox-close {
+.close-modal {
   position: absolute;
   top: 14px;
   right: 14px;
@@ -663,11 +677,74 @@ input:focus, textarea:focus, select:focus {
   cursor: pointer;
 }
 
-.lightbox img {
-  max-width: min(1100px, 92vw);
-  max-height: 86vh;
-  border-radius: 18px;
+html:has(.lightbox[open]) { overflow: hidden; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #111;
+  color: white;
 }
+
+.lightbox-stage {
+  position: absolute;
+  inset: 56px 0;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.lightbox img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.digest-lightbox { background: transparent; }
+.digest-lightbox::backdrop { background: rgba(0, 0, 0, 0.68); }
+.digest-lightbox[open] { display: grid; place-items: center; }
+.digest-lightbox form { display: contents; }
+.digest-lightbox img {
+  max-width: min(90vw, 960px);
+  max-height: 82dvh;
+  border-radius: 12px;
+}
+
+.lightbox-stage.is-zoomed { cursor: grab; }
+.lightbox-stage.is-zoomed:active { cursor: grabbing; }
+
+.lightbox button {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ffffff55;
+  border-radius: 50%;
+  background: #242424;
+  color: white;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.lightbox button:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+.lightbox-close { top: 8px; right: 8px; }
+.lightbox-prev, .lightbox-next { top: 50%; transform: translateY(-50%); }
+.lightbox-prev { left: 2px; }
+.lightbox-next { right: 2px; }
 
 .notification {
   position: fixed;
@@ -715,6 +792,7 @@ input:focus, textarea:focus, select:focus {
   .menu-toggle { display: inline-flex; }
   .shell-bar { display: flex; margin-bottom: 16px; }
   .shell-bar .theme-switch { display: grid; }
+  .shell:has(.home-main) .shell-bar { margin: 0; padding: 12px 16px; }
   .hero { grid-template-columns: 1fr; }
   #header-date { white-space: normal; margin-left: 0; }
   .employee-item { flex-direction: column; align-items: stretch; }

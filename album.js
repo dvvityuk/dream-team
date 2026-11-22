@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const isAdmin = root.dataset.admin === '1';
   const createForm = document.getElementById('create-folder-form');
   let folders = [];
+  let viewer;
 
   function currentFolderId() {
     return new URLSearchParams(window.location.search).get('folder') || '';
@@ -31,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function render() {
+    viewer?.close();
+    viewer = null;
     const id = currentFolderId();
     if (!id) {
       renderGrid();
@@ -75,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const remove = isAdmin
         ? '<button type="button" class="btn danger photo-delete" data-file="' + escapeHtml(photo.file) + '">Удалить</button>'
         : '';
-      return '<figure class="photo-card"><button type="button" class="photo-open" data-src="' + escapeHtml(photo.url) + '">' +
+      return '<figure class="photo-card"><button type="button" class="photo-open">' +
         '<img src="' + escapeHtml(photo.url) + '" alt="' + escapeHtml(folder.name) + '"></button>' + remove + '</figure>';
     }).join('');
     const tools = isAdmin
@@ -86,21 +89,16 @@ document.addEventListener('DOMContentLoaded', function () {
       '<div class="folder-toolbar"><button type="button" class="btn ghost" id="back-to-folders">Все папки</button>' + tools + '</div>' +
       '<h2 class="folder-title">' + escapeHtml(folder.name) + '</h2>' +
       (folder.photos.length ? '<div class="photo-grid">' + photos + '</div>' : '<p class="empty-message">В этой папке пока нет фотографий.</p>') +
-      '<div id="lightbox" class="lightbox" hidden><button type="button" class="lightbox-close" aria-label="Закрыть">&times;</button><img alt=""></div>';
+      '<dialog class="lightbox" aria-label="Просмотр фотографий">' +
+        '<div class="lightbox-stage"><img alt="" draggable="false"></div>' +
+        '<button type="button" class="lightbox-close" aria-label="Закрыть" autofocus>&times;</button>' +
+        '<button type="button" class="lightbox-prev" aria-label="Предыдущее фото">‹</button>' +
+        '<button type="button" class="lightbox-next" aria-label="Следующее фото">›</button>' +
+      '</dialog>';
 
     document.getElementById('back-to-folders').addEventListener('click', function () { setFolder(''); });
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = lightbox.querySelector('img');
-    root.querySelectorAll('.photo-open').forEach(function (button) {
-      button.addEventListener('click', function () {
-        lightboxImg.src = button.getAttribute('data-src');
-        lightbox.hidden = false;
-      });
-    });
-    lightbox.querySelector('.lightbox-close').addEventListener('click', function () { lightbox.hidden = true; });
-    lightbox.addEventListener('click', function (event) {
-      if (event.target === lightbox) lightbox.hidden = true;
-    });
+    viewer = root.querySelector('.lightbox');
+    setupViewer(viewer, folder);
 
     const uploadForm = document.getElementById('upload-photo-form');
     uploadForm?.addEventListener('submit', function (event) {
@@ -159,6 +157,137 @@ document.addEventListener('DOMContentLoaded', function () {
           });
       });
     });
+  }
+
+  function setupViewer(dialog, folder) {
+    const stage = dialog.querySelector('.lightbox-stage');
+    const img = stage.querySelector('img');
+    const prev = dialog.querySelector('.lightbox-prev');
+    const next = dialog.querySelector('.lightbox-next');
+    const pointers = new Map();
+    let index = 0;
+    let scale = 1;
+    let x = 0;
+    let y = 0;
+    let swipeStart;
+    let pinching = false;
+
+    function updateTransform() {
+      const fit = Math.min(1, stage.clientWidth / img.naturalWidth, stage.clientHeight / img.naturalHeight);
+      const width = img.naturalWidth ? img.naturalWidth * fit : 0;
+      const height = img.naturalHeight ? img.naturalHeight * fit : 0;
+      const limitX = Math.max(0, (width * scale - stage.clientWidth) / 2);
+      const limitY = Math.max(0, (height * scale - stage.clientHeight) / 2);
+      x = Math.max(-limitX, Math.min(limitX, x));
+      y = Math.max(-limitY, Math.min(limitY, y));
+      img.style.transform = 'translate(' + x + 'px, ' + y + 'px) scale(' + scale + ')';
+      stage.classList.toggle('is-zoomed', scale > 1);
+    }
+
+    function show(photoIndex) {
+      const count = folder.photos.length;
+      index = (photoIndex + count) % count;
+      img.src = folder.photos[index].url;
+      img.alt = folder.name + ' — фото ' + (index + 1) + ' из ' + count;
+      scale = 1;
+      x = 0;
+      y = 0;
+      swipeStart = null;
+      updateTransform();
+    }
+
+    function changePhoto(direction) {
+      if (folder.photos.length > 1) show(index + direction);
+    }
+
+    function zoom(factor, clientX, clientY) {
+      const bounds = stage.getBoundingClientRect();
+      const anchorX = clientX - bounds.left - bounds.width / 2;
+      const anchorY = clientY - bounds.top - bounds.height / 2;
+      const nextScale = Math.max(1, Math.min(5, scale * factor));
+      x = anchorX - (anchorX - x) * nextScale / scale;
+      y = anchorY - (anchorY - y) * nextScale / scale;
+      scale = nextScale;
+      updateTransform();
+    }
+
+    prev.hidden = next.hidden = folder.photos.length < 2;
+    prev.addEventListener('click', function () { changePhoto(-1); });
+    next.addEventListener('click', function () { changePhoto(1); });
+    dialog.querySelector('.lightbox-close').addEventListener('click', function () { dialog.close(); });
+    dialog.addEventListener('click', function (event) {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      changePhoto(event.key === 'ArrowLeft' ? -1 : 1);
+    });
+    dialog.addEventListener('close', function () {
+      pointers.clear();
+      pinching = false;
+      swipeStart = null;
+    });
+    root.querySelectorAll('.photo-open').forEach(function (button, photoIndex) {
+      button.addEventListener('click', function () {
+        dialog.showModal();
+        show(photoIndex);
+      });
+    });
+    img.addEventListener('load', updateTransform);
+    stage.addEventListener('wheel', function (event) {
+      event.preventDefault();
+      const delta = event.deltaY * (event.deltaMode === 0 ? 1 : 16);
+      zoom(Math.exp(-delta * 0.003), event.clientX, event.clientY);
+    }, { passive: false });
+
+    stage.addEventListener('pointerdown', function (event) {
+      if (event.button !== 0 || pointers.size === 2) return;
+      stage.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, event);
+      if (pointers.size === 2) {
+        pinching = true;
+        swipeStart = null;
+      } else if (event.pointerType !== 'mouse' && scale === 1) {
+        swipeStart = event;
+      }
+    });
+
+    stage.addEventListener('pointermove', function (event) {
+      const before = pointers.get(event.pointerId);
+      if (!before) return;
+      pointers.set(event.pointerId, event);
+      if (pointers.size === 2) {
+        const other = Array.from(pointers.values()).find(function (point) {
+          return point.pointerId !== event.pointerId;
+        });
+        const oldDistance = Math.hypot(before.clientX - other.clientX, before.clientY - other.clientY);
+        const newDistance = Math.hypot(event.clientX - other.clientX, event.clientY - other.clientY);
+        x += (event.clientX - before.clientX) / 2;
+        y += (event.clientY - before.clientY) / 2;
+        zoom(newDistance / Math.max(1, oldDistance),
+          (event.clientX + other.clientX) / 2, (event.clientY + other.clientY) / 2);
+      } else if (scale > 1) {
+        x += event.clientX - before.clientX;
+        y += event.clientY - before.clientY;
+        updateTransform();
+      }
+    });
+
+    function endPointer(event) {
+      if (!pointers.delete(event.pointerId) || pointers.size) return;
+      if (event.type === 'pointerup' && swipeStart && !pinching && scale === 1) {
+        const dx = event.clientX - swipeStart.clientX;
+        const dy = event.clientY - swipeStart.clientY;
+        if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy)) changePhoto(dx < 0 ? 1 : -1);
+      }
+      swipeStart = null;
+      pinching = false;
+    }
+
+    stage.addEventListener('pointerup', endPointer);
+    stage.addEventListener('pointercancel', endPointer);
+    stage.addEventListener('lostpointercapture', endPointer);
   }
 
   function postAlbum(payload) {
