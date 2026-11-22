@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const editAchievementsInput = document.getElementById('edit-achievements');
   const cancelEditBtn = document.getElementById('cancel-edit');
   const emailSettingsForm = document.getElementById('email-settings-form');
+  const smtpPasswordInput = document.getElementById('smtp-app-password');
+  const smtpPasswordStatus = document.getElementById('smtp-password-status');
   const senderEmailInput = document.getElementById('sender-email');
   const emailSubjectInput = document.getElementById('email-subject');
   const expertPasswordForm = document.getElementById('expert-password-form');
@@ -123,6 +125,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (isAdmin) loadEmailSettings();
   }
 
+  function updateSmtpPasswordStatus(settings) {
+    smtpPasswordStatus.textContent = settings.has_app_password
+      ? 'Пароль сохранён. Оставьте поле пустым, чтобы сохранить текущий пароль.'
+      : 'Введите пароль внешнего приложения для отправки через SMTP Mail.ru.';
+  }
+
   function loadEmailSettings() {
     fetch('get_email_settings.php?v=' + Date.now())
       .then(readJson)
@@ -130,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!data || !data.success || !senderEmailInput) return;
         senderEmailInput.value = data.settings.sender || '';
         emailSubjectInput.value = data.settings.subject || '';
+        updateSmtpPasswordStatus(data.settings);
       })
       .catch(function () {});
   }
@@ -400,7 +409,8 @@ document.addEventListener('DOMContentLoaded', function () {
     event.preventDefault();
     const payload = {
       sender: senderEmailInput.value.trim(),
-      subject: emailSubjectInput.value.trim()
+      subject: emailSubjectInput.value.trim(),
+      app_password: smtpPasswordInput.value
     };
     fetch('save_email_settings.php', {
       method: 'POST',
@@ -411,6 +421,8 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (data) {
         if (!data) return;
         if (data.success) {
+          if (smtpPasswordInput.value === payload.app_password) smtpPasswordInput.value = '';
+          updateSmtpPasswordStatus(data.settings);
           showNotification('Настройки почты сохранены', 'success');
         } else {
           showNotification(data.error || 'Ошибка сохранения', 'error');

@@ -15,3 +15,4 @@ desktop.ini
 data/.storage.lock
 .qdigest-*
 data/cache/
+/data/feedback-mail.json

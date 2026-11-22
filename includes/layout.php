@@ -101,14 +101,14 @@ function layout_end(string $script = ''): void
     $feedback = asset_href('feedback.js');
     echo <<<HTML
   </div>
-  <div id="feedback-modal" class="modal" hidden>
+  <div id="feedback-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title" hidden>
     <div class="modal-content">
       <button type="button" class="close-modal" aria-label="Закрыть">&times;</button>
       <p class="eyebrow">Анонимно</p>
-      <h2>Напиши мне</h2>
-      <p class="modal-note">Сообщение уйдёт на nastasya_zablotskaya@mail.ru</p>
+      <h2 id="feedback-title">Напиши мне</h2>
       <form id="feedback-form">
-        <textarea id="feedback-message" placeholder="Ваше пожелание по работе..." required></textarea>
+        <textarea id="feedback-message" aria-label="Текст сообщения" placeholder="Ваше пожелание по работе..." required></textarea>
+        <p id="feedback-status" class="modal-note" role="status"></p>
         <button type="submit" class="btn">Отправить</button>
       </form>
     </div>

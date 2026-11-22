@@ -119,6 +119,10 @@ layout_start('Редактирование — Q digest', 'edit');
           <h3>Почта для «Напиши мне»</h3>
           <form id="email-settings-form">
             <input type="email" id="sender-email" placeholder="Email отправителя" required>
+            <label for="smtp-app-password">Пароль внешнего приложения Mail.ru</label>
+            <input type="password" id="smtp-app-password" autocomplete="new-password" maxlength="256"
+                   aria-describedby="smtp-password-status">
+            <p id="smtp-password-status" class="locked-mail" aria-live="polite"></p>
             <p class="locked-mail">Получатель: nastasya_zablotskaya@mail.ru</p>
             <input type="text" id="email-subject" placeholder="Тема письма" required maxlength="150">
             <button type="submit" class="btn">Сохранить настройки</button>
