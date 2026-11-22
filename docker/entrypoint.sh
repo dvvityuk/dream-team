@@ -100,7 +100,7 @@ cat > /etc/cron.d/qdigest <<'EOF'
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 15 4 * * * www-data /usr/local/bin/php /var/www/dream-team/scripts/prune-storage.php
-0 6 * * * root /var/www/dream-team/scripts/daily-github-push.sh
+0 1 * * * root /var/www/dream-team/scripts/daily-github-push.sh
 
 EOF
 chmod 644 /etc/cron.d/qdigest

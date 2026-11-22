@@ -423,15 +423,31 @@ button.story-card {
   cursor: pointer;
 }
 .story-question:is(:hover, :focus-visible, [aria-expanded="true"]) { border-color: var(--accent-text); }
+.story-feature > .story-qa { margin-top: 36px; }
+.story-feature .story-questions { animation: story-questions-reveal 600ms ease-out 5s both; }
+@keyframes story-questions-reveal {
+  from { visibility: hidden; opacity: 0; }
+  to { visibility: visible; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-feature .story-questions { animation-duration: 0s; }
+}
+.story-feature .story-question {
+  border: 0;
+  background: transparent;
+}
+.story-feature .story-question:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
 .story-qa-overlay {
   position: absolute;
-  inset: 56% 3% auto;
+  inset: 64% 3% auto;
   margin: 0;
 }
 .story-qa-overlay .story-question {
-  background: rgba(20, 16, 13, 0.85);
   color: #fff5df;
-  border-color: #d29d55;
+  text-shadow: 0 1px 3px #140f0b, 0 0 5px #140f0b;
   font-size: clamp(0.75rem, 2vw, 1rem);
 }
 .story-answers { display: grid; }

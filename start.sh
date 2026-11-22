@@ -45,4 +45,4 @@ if [[ -s "$relay" ]]; then
 else
   echo "Нет data/mail-relay.env. Письма «Напиши мне» сохраняются в ${ROOT}/data/mail/feedback/."
 fi
-echo "Копия проекта отправляется на GitHub каждый день в 06:00 из контейнера."
+echo "Копия проекта отправляется на GitHub каждый день в 01:00 UTC из контейнера."

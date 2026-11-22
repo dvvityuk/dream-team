@@ -20,7 +20,7 @@ function render_story_avatar(string $path, string $name, string $class, bool $mo
     $class = storytelling_escape($class);
     $name = storytelling_escape($name);
     if (storytelling_video($path)) {
-        $playback = $motion ? ' autoplay loop' : '';
+        $playback = $motion ? ' autoplay' : '';
         echo "<video class=\"$class\" src=\"$src\" aria-label=\"$name\" width=\"900\" height=\"985\" muted playsinline preload=\"metadata\"$playback></video>";
     } else {
         echo "<img class=\"$class\" src=\"$src\" alt=\"$name\">";
