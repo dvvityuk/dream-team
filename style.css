@@ -249,20 +249,25 @@ html[data-theme="light"] .theme-switch [data-theme-choice="light"] {
 h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
 
 .shell:has(.home-main) {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   max-width: none;
   padding: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%,
+      color-mix(in srgb, var(--accent-text) 42%, transparent) 0%,
+      color-mix(in srgb, var(--accent-text) 22%, transparent) 42%,
+      transparent 88%) top / 100% max(30rem, 100dvh) no-repeat,
+    linear-gradient(90deg, var(--bg-2), transparent 30%, transparent 70%, var(--bg-2)),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent-text) 9%, transparent) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--accent-text) 9%, transparent) 0 1px, transparent 1px 32px),
+    var(--bg-2);
 }
-
-.home-main { grid-row: 2; min-width: 0; min-height: 0; }
 
 .home-poster {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
 }
 
 .hero, .page-head { margin-bottom: 28px; }
@@ -278,6 +283,22 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
   margin: 0 0 12px;
   font-size: clamp(2.6rem, 5vw, 4.6rem);
   line-height: 0.95;
+}
+
+.home-heading {
+  margin: 0;
+  padding: clamp(24px, 4vw, 56px) 12px clamp(24px, 3vw, 40px);
+  text-align: center;
+}
+
+.home-heading h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 6.5vw, 4.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  text-shadow:
+    0 0.035em 0 color-mix(in srgb, var(--ivory) 25%, transparent),
+    0 0.09em 0.24em var(--hero-glow);
 }
 
 #header-date {
